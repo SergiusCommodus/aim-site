@@ -11,11 +11,12 @@
 </style>
 </head>
 <body>
+<script>(function(){var d=document.documentElement;try{if(sessionStorage.getItem("aim.intro")||matchMedia("(prefers-reduced-motion: reduce)").matches)return;sessionStorage.setItem("aim.intro","1");}catch(e){return;}d.classList.add("app-intro-play");document.write('<div class="app-intro" id="appIntro" aria-hidden="true"><div class="glow"></div><img src="{{LOGO}}" alt=""></div>');setTimeout(function(){var i=document.getElementById("appIntro");if(i)i.remove();},1800);})();</script>
 <header class="topbar"><div class="bar" style="padding-inline:20px">
   <a class="brand" href="index.html" aria-label="AIM home"><img src="{{LOGO}}" alt="AIM" width="74" height="24"><small>Artemis Investment<br>Metrics</small></a>
   <div class="ws" id="wsSlot"></div>
 </div></header>
-<div id="app"><div class="empty" style="padding:60px">Loading your workspace…</div></div>
+<div id="app"><div class="skel-shell" aria-hidden="true"><div class="sr-rail"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div><div class="sr-main"><div class="skel t"></div><div class="skel s"></div><div class="sr-row"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div><div class="skel sr-big"></div></div></div></div>
 <noscript><p style="padding:24px">AIM needs JavaScript turned on.</p></noscript>
 <script>
 {{JS:engine}}

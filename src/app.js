@@ -190,7 +190,7 @@
     var legend = series.length > 1 ? '<div class="legend">' + series.map(function (s) { return '<span><i class="' + (s.dash ? "dash" : "") + '" style="' + (s.dash ? "border-color:" : "background:") + s.color + '"></i>' + esc(s.name) + "</span>"; }).join("") + "</div>" : "";
     return '<div class="cwrap" id="' + id + '" style="min-height:' + (o.h || 230) + 'px"></div>' + legend;
   }
-  function drawChart(id, cfg) {
+  function drawChart(id, cfg, animate) {
     var el = document.getElementById(id); if (!el) return;
     var labels = cfg.labels, series = cfg.series, o = cfg.o;
     var W = Math.max(260, Math.round(el.clientWidth || 600)), H = o.h || 230, L = 58, Rr = 14, T = 12, B = 28, iw = W - L - Rr, ih = H - T - B;
@@ -211,19 +211,20 @@
     if (o.kind === "bar") {
       var gw = Math.min(band * 0.72, 26 * series.length + 2 * (series.length - 1)), bw = (gw - 2 * (series.length - 1)) / series.length;
       series.forEach(function (s, si) {
-        marks += s.values.map(function (v, i) { var x = xc(i) - gw / 2 + si * (bw + 2); return '<path d="' + roundBar(x, y(0), bw, y(v), 4) + '" fill="' + s.color + '"/>'; }).join("");
+        marks += s.values.map(function (v, i) { var x = xc(i) - gw / 2 + si * (bw + 2); return '<path class="bar" style="--i:' + i + '" d="' + roundBar(x, y(0), bw, y(v), 4) + '" fill="' + s.color + '"/>'; }).join("");
       });
     } else {
       series.forEach(function (s) {
         var pts = s.values.map(function (v, i) { return xc(i).toFixed(1) + "," + y(v).toFixed(1); });
-        if (o.area) marks += '<path d="M' + xc(0) + "," + y(lo) + "L" + pts.join("L") + "L" + xc(n - 1) + "," + y(lo) + 'Z" fill="' + s.color + '" opacity=".08"/>';
-        marks += '<polyline points="' + pts.join(" ") + '" fill="none" stroke="' + s.color + '" stroke-width="2"' + (s.dash ? ' stroke-dasharray="5 4"' : "") + ' stroke-linejoin="round" stroke-linecap="round"/>';
-        var li = n - 1; if (!s.dash) marks += '<circle cx="' + xc(li) + '" cy="' + y(s.values[li]) + '" r="4.5" fill="' + s.color + '" stroke="var(--paper)" stroke-width="2"/>';
+        if (o.area) marks += '<path class="area" d="M' + xc(0) + "," + y(lo) + "L" + pts.join("L") + "L" + xc(n - 1) + "," + y(lo) + 'Z" fill="' + s.color + '" fill-opacity=".08"/>';
+        marks += '<polyline class="' + (s.dash ? "" : "ln") + '" points="' + pts.join(" ") + '" fill="none" stroke="' + s.color + '" stroke-width="2"' + (s.dash ? ' stroke-dasharray="5 4"' : "") + ' stroke-linejoin="round" stroke-linecap="round"/>';
+        var li = n - 1; if (!s.dash) marks += '<circle class="dot" cx="' + xc(li) + '" cy="' + y(s.values[li]) + '" r="4.5" fill="' + s.color + '" stroke="var(--paper)" stroke-width="2"/>';
       });
     }
     el.innerHTML = '<svg class="chart" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(o.label || "Chart") + '">' + g + zero + yl + xl + marks +
       '<line class="xh" y1="' + T + '" y2="' + (T + ih) + '" stroke="var(--faint)" stroke-dasharray="3 3" opacity="0"/><circle class="xd" r="5" fill="var(--navy)" stroke="var(--paper)" stroke-width="2" opacity="0"/>' +
       '<rect x="' + L + '" y="' + T + '" width="' + iw + '" height="' + ih + '" fill="transparent"/></svg><div class="tip" hidden></div>';
+    if (animate && !REDUCED) { $$("polyline.ln", el).forEach(function (p) { try { p.style.setProperty("--len", p.getTotalLength()); } catch (e) { } }); el.classList.add("enter"); setTimeout(function () { el.classList.remove("enter"); }, 1200); }
     var d = { labels: labels, series: series, W: W, H: H, xc: xc, y: y, n: n, band: band, kind: o.kind, fmt: o.fmt || function (v) { return M(v); } };
     var svg = el.querySelector("svg"), tip = el.querySelector(".tip"), xh = el.querySelector(".xh"), xd = el.querySelector(".xd");
     function move(e) {
@@ -240,8 +241,8 @@
     function leave() { tip.hidden = true; xh.setAttribute("opacity", 0); xd.setAttribute("opacity", 0); }
     svg.addEventListener("pointermove", move); svg.addEventListener("pointerleave", leave);
   }
-  function bindCharts() {
-    Object.keys(pendingCharts).forEach(function (id) { chartReg[id] = pendingCharts[id]; drawChart(id, pendingCharts[id]); });
+  function bindCharts(animate) {
+    Object.keys(pendingCharts).forEach(function (id) { chartReg[id] = pendingCharts[id]; drawChart(id, pendingCharts[id], animate); });
     pendingCharts = {};
   }
   var rzT;
@@ -249,7 +250,7 @@
   function dial(sc) {
     var c = 2 * Math.PI * 46, f = sc.total / 100, col = { Strong: "var(--good)", Workable: "var(--navy)", Marginal: "var(--warn)", Weak: "var(--bad)" }[sc.grade];
     return '<svg class="dial" viewBox="0 0 112 112" role="img" aria-label="AIM Score ' + sc.total + ' of 100"><circle cx="56" cy="56" r="46" fill="none" stroke="var(--tint)" stroke-width="10"/>' +
-      '<circle cx="56" cy="56" r="46" fill="none" stroke="' + col + '" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + (c * f).toFixed(1) + " " + c.toFixed(1) + '" transform="rotate(-90 56 56)"/>' +
+      '<circle class="arc" cx="56" cy="56" r="46" fill="none" stroke="' + col + '" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + (c * f).toFixed(1) + " " + c.toFixed(1) + '" transform="rotate(-90 56 56)"/>' +
       '<text x="56" y="58" text-anchor="middle" style="font:600 30px var(--mono);fill:var(--ink)">' + sc.total + '</text><text x="56" y="78" text-anchor="middle" style="font:500 10px var(--mono);letter-spacing:.1em;fill:var(--muted)">AIM SCORE</text></svg>';
   }
   function gradePill(sc) { var k = { Strong: "good", Workable: "neutral", Marginal: "warn", Weak: "bad" }[sc.grade]; return '<span class="pill ' + k + '"><i></i>' + sc.grade + "</span>"; }
@@ -279,41 +280,89 @@
     if (!st || route().v === "setup") { slot.innerHTML = '<a class="tb-link" href="index.html">Back to the site</a>'; return; }
     var first = (st.settings.name || "").trim();
     slot.innerHTML = '<div class="modesw" role="group" aria-label="Workspace"><button data-act="mode" data-v="demo" aria-pressed="' + (mode === "demo") + '">' + ic("demo") + '<span>Demo</span></button><button data-act="mode" data-v="live" aria-pressed="' + (mode === "live") + '">' + ic("me") + "<span>" + (live ? "My workspace" : "Set up mine") + "</span></button></div>" +
-      '<button class="tb-search" data-act="palette" aria-label="Search and commands" title="Search and commands">' + ic("search") + '<span>Search</span><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl ") + "K</kbd></button>" +
+      '<button class="tb-search" data-act="palette" aria-label="Search and commands">' + ic("search") + '<span>Search</span><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl ") + "K</kbd></button>" +
       '<span class="who"><span class="av" aria-hidden="true">' + esc((first || (mode === "demo" ? "D" : "A")).charAt(0).toUpperCase()) + '</span><span class="wsname">' + esc(mode === "demo" ? "Demo workspace" : first ? first + "'s workspace" : "Your workspace") + "</span></span>";
+  }
+  try { if (localStorage.getItem("aim.rail") === "1") document.documentElement.classList.add("rail-collapsed"); } catch (e) { }
+  var REDUCED = (function () { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
+  var shellBuilt = false, lastView = "", lastTab = "", lastMode = "";
+  function buildShell() {
+    root.innerHTML = '<div id="ribbonSlot"></div><div class="app"><nav class="rail" aria-label="App"><div class="ind" aria-hidden="true"></div>' + NAV.map(function (n) {
+      if (n[0] === "sep") return '<div class="sep"></div>';
+      if (n[0] === "grp") return '<div class="grp">' + n[1] + "</div>";
+      return '<a href="#' + n[0] + '" data-nav="' + n[0] + '" data-tip="' + n[1] + '" class="tip-side">' + ic(n[2]) + "<span>" + n[1] + "</span></a>";
+    }).join("") + (FEEDBACK_URL ? '<a href="#" data-act="feedback" data-tip="Send feedback" class="tip-side">' + ic("send") + "<span>Send feedback</span></a>" : "") +
+      '<div class="foot"><span class="ver">AIM ' + VERSION + '</span>Analysis and education, not investment, tax, or legal advice.</div><button class="collapse" data-act="rail" aria-label="Collapse the sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span>Collapse</span></button></nav><main class="main" id="main"></main></div>';
+    shellBuilt = true;
+  }
+  function moveIndicator(cur) {
+    var rail = $(".rail"), ind = rail && rail.querySelector(".ind"); if (!ind) return;
+    $$(".rail a[data-nav]").forEach(function (a) { if (a.dataset.nav === cur) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    var on = rail.querySelector('a[data-nav="' + cur + '"]');
+    if (!on) { ind.classList.remove("on"); return; }
+    var top = on.offsetTop; ind.style.top = top + "px"; ind.style.height = on.offsetHeight + "px";
+    if (!ind.classList.contains("on")) { ind.style.transition = "none"; ind.classList.add("on"); void ind.offsetHeight; ind.style.transition = ""; }
   }
   function render() {
     var r = route();
-    if (r.v === "setup") return renderSetup();
-    if (!st) return renderStart();
+    if (r.v === "setup") { shellBuilt = false; return renderSetup(); }
+    if (!st) { shellBuilt = false; return renderStart(); }
     var fk = focusKey(document.activeElement);
     var view = VIEWS[r.v] ? r.v : "dashboard";
     var cur = view === "opp" ? "opportunities" : view;
     topbar();
     document.title = (view === "opp" ? "Analysis" : NAV_TITLES[view] || "Dashboard") + " | AIM" + (mode === "demo" ? " Demo" : "");
+    if (!shellBuilt) buildShell();
     var ribbon = mode === "demo" ? '<div class="ribbon" role="note"><span class="rb-tag">Demo mode</span><span class="rb-txt">You are exploring a sample portfolio. Edit anything; it stays in the demo and never touches your own workspace.</span><span class="rb-act"><button class="btn sm link light-link" data-act="ask-reset-demo">Reset demo</button><button class="btn sm light" data-act="mode" data-v="live">' + (live ? "Go to my workspace" : "Set up my workspace") + "</button></span></div>" : "";
     var noStore = !STORAGE ? '<div class="ribbon warnr" role="note"><span class="rb-txt">This browser is blocking storage, so changes last only until you close the tab. Download a backup from Settings to keep your work.</span></div>' : "";
-    root.innerHTML = ribbon + noStore + '<div class="app"><nav class="rail" aria-label="App">' + NAV.map(function (n) {
-      if (n[0] === "sep") return '<div class="sep"></div>';
-      if (n[0] === "grp") return '<div class="grp">' + n[1] + "</div>";
-      return '<a href="#' + n[0] + '"' + (cur === n[0] ? ' aria-current="page"' : "") + ">" + ic(n[2]) + "<span>" + n[1] + "</span></a>";
-    }).join("") + (FEEDBACK_URL ? '<a href="#" data-act="feedback">' + ic("send") + "<span>Send feedback</span></a>" : "") + '<div class="foot"><span class="ver">AIM ' + VERSION + '</span>Analysis and education, not investment, tax, or legal advice.</div></nav><main class="main" id="main">' + VIEWS[view](r) + "</main></div>";
-    bindCharts();
+    var rs = $("#ribbonSlot"); if (rs.innerHTML !== ribbon + noStore) rs.innerHTML = ribbon + noStore;
+    document.documentElement.classList.toggle("has-ribbon", mode === "demo");
+    var main = $("#main");
+    var routeKey = location.hash.replace(/^#(welcome|demo|start)$/, "#dashboard") + "|" + mode + "|" + ui.lesson + "|" + ui.plan;
+    var pageChanged = routeKey !== lastRoute, tabChanged = !pageChanged && ui.tab !== lastTab;
+    main.innerHTML = VIEWS[view](r);
+    moveIndicator(cur);
+    bindCharts(pageChanged || tabChanged);
     if (VIEWS[view].after) VIEWS[view].after(r);
-    var rk = location.hash + "|" + ui.tab + "|" + ui.lesson + "|" + ui.plan;
-    if (rk !== lastRoute) { lastRoute = rk; window.scrollTo(0, 0); }
+    if (pageChanged) { lastRoute = routeKey; lastTab = ui.tab; window.scrollTo(0, 0); enter(main); }
+    else if (tabChanged) { lastTab = ui.tab; var tb = $("#tabBody"); if (tb) enter(tb); }
     else if (fk) { try { var f = document.querySelector(fk); if (f) f.focus({ preventScroll: true }); } catch (e) { } }
+  }
+  /* Arrival: children rise in with a short stagger, numbers count to their value, bars grow to their width. */
+  function enter(el) {
+    if (REDUCED) return;
+    el.classList.remove("enter"); void el.offsetWidth;
+    Array.prototype.forEach.call(el.children, function (c, i) { c.style.setProperty("--i", Math.min(i, 10)); });
+    el.classList.add("enter");
+    setTimeout(function () { el.classList.remove("enter"); }, 900);
+    $$(".kpi > strong, .m > strong, .mini b, .rv strong, .sumrow b", el).forEach(countUp);
+    $$(".bar-p i, .meter i, .hbt i, .alloc i, .tornado .bar i", el).forEach(function (i) { var w = i.style.width; if (!w) return; i.style.transition = "none"; i.style.width = "0"; requestAnimationFrame(function () { requestAnimationFrame(function () { i.style.transition = ""; i.style.width = w; }); }); });
+    $$(".dial .arc", el).forEach(function (a) { var d = a.getAttribute("stroke-dasharray"); a.style.transition = "none"; a.setAttribute("stroke-dasharray", "0 " + d.split(" ")[1]); requestAnimationFrame(function () { requestAnimationFrame(function () { a.style.transition = ""; a.setAttribute("stroke-dasharray", d); }); }); });
+  }
+  function countUp(el) {
+    while (el.childElementCount === 1 && el.firstElementChild.textContent === el.textContent) el = el.firstElementChild;
+    var t = el.textContent, m = /(-?−?)([$]?)(\d[\d,]*)(\.\d+)?/.exec(t); if (!m || el.dataset.counting) return;
+    var target = parseFloat(m[3].replace(/,/g, "") + (m[4] || "")), dec = m[4] ? m[4].length - 1 : 0, start = performance.now(), dur = 650;
+    if (!isFinite(target) || target === 0) return;
+    el.dataset.counting = "1";
+    function fmt(v) { var s = v.toFixed(dec); var parts = s.split("."); parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","); return parts.join("."); }
+    (function tick(now) {
+      var p = Math.min(1, (now - start) / dur), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = t.slice(0, m.index) + m[1] + m[2] + fmt(target * e) + t.slice(m.index + m[0].length);
+      if (p < 1 && el.isConnected) requestAnimationFrame(tick); else { el.textContent = t; delete el.dataset.counting; }
+    })(start);
   }
   function later() { setTimeout(render, 0); }
 
   /* ---------- start screen: choose the demo or set up a real workspace ---------- */
   function renderStart() {
-    topbar(); document.title = "Get started | AIM";
+    document.documentElement.classList.remove("has-ribbon"); topbar(); document.title = "Get started | AIM";
     var hi = leadFirst ? "Welcome, " + esc(leadFirst) + "." : "Welcome to AIM.";
     root.innerHTML = '<div class="start"><div class="start-in"><span class="eyebrow">AIM ' + VERSION + '</span><h1>' + hi + ' How do you want to start?</h1><p class="lede">Both open instantly. You can switch between them any time from the top bar.</p><div class="choose">' +
       '<button class="choice" data-act="mode" data-v="demo"><span class="ci">' + ic("demo") + '</span><b>Explore the demo</b><span>A fully modeled sample portfolio: a duplex, a beach condo, a laundromat, a rental already owned, a budget, debts, and goals. Nothing to enter.</span><span class="go">Open the demo ' + ic("arrow") + "</span></button>" +
       '<button class="choice primary" data-act="mode" data-v="live"><span class="ci">' + ic("me") + '</span><b>Set up my workspace</b><span>A guided five minute setup for your real income, spending, accounts, debts, and targets. Then analyze the deals you are actually looking at.</span><span class="go">Start setup ' + ic("arrow") + "</span></button></div>" +
       '<p class="fine">' + ic("shield") + 'Your workspace is saved in this browser, not on AIM servers. <label for="startRestore" class="linkish">Restore from a backup file</label><input id="startRestore" type="file" accept="application/json,.json" class="sr"></p><div id="restoreSlot"></div></div></div>';
+    if (lastRoute !== "start") { lastRoute = "start"; enter(root.querySelector(".start-in")); }
   }
 
   /* ---------- guided setup for the live workspace ---------- */
@@ -341,7 +390,7 @@
   }
   function renderSetup() {
     var S = setupState(), k = S.step, tot = SETUP_STEPS.length;
-    topbar(); document.title = "Set up your workspace | AIM";
+    document.documentElement.classList.remove("has-ribbon"); topbar(); document.title = "Set up your workspace | AIM";
     function inp(id, label, val, o) { o = o || {}; return '<div class="f' + (o.full ? " full" : "") + '"><label for="' + id + '">' + label + (o.hint ? " <em>" + o.hint + "</em>" : "") + "</label>" + (o.money ? '<div class="inwrap pre"><span class="u">$</span>' : o.unit ? '<div class="inwrap post">' : "") + '<input id="' + id + '" data-su="' + (o.key || id) + '"' + (o.type ? ' type="' + o.type + '"' : o.money || o.unit || o.numeric ? ' type="number" inputmode="decimal" min="0" step="any"' : "") + ' value="' + esc(val) + '"' + (o.ph ? ' placeholder="' + esc(o.ph) + '"' : "") + (o.ac ? ' autocomplete="' + o.ac + '"' : "") + ">" + (o.unit ? '<span class="u">' + o.unit + "</span></div>" : o.money ? "</div>" : "") + "</div>"; }
     var body = "";
     if (k === 0) {
@@ -369,7 +418,7 @@
         "</div>" + (b.income <= 0 ? '<p class="note warnn">You have not entered any income, so AIM cannot measure savings or readiness yet. You can add it later in Budget and goals.</p>' : "") + '<p class="lbl">Start with a first analysis? <em>Optional</em></p><div class="focus three">' + [["rental", "Long term rental"], ["str", "Short term rental"], ["business", "Business"]].map(function (t) { return '<label class="fopt"><input type="radio" name="sufirst" value="' + t[0] + '"' + (S.first === t[0] ? " checked" : "") + ' data-su-first="1"><span><b>' + t[1] + "</b></span></label>"; }).join("") + '<label class="fopt"><input type="radio" name="sufirst" value=""' + (!S.first ? " checked" : "") + ' data-su-first="1"><span><b>Not now</b></span></label></div>';
     }
     root.innerHTML = '<div class="setup"><div class="setup-in"><div class="sprog"><span class="eyebrow">Set up your workspace · Step ' + (k + 1) + " of " + tot + '</span><ol>' + SETUP_STEPS.map(function (t, i) { return '<li class="' + (i < k ? "done" : i === k ? "on" : "") + '"><span>' + (i < k ? "✓" : i + 1) + "</span>" + t + "</li>"; }).join("") + '</ol><div class="bar-p"><i style="width:' + ((k + 1) / tot * 100).toFixed(0) + '%"></i></div></div><form class="card scard" id="setupForm" novalidate><div class="body">' + body + (S.err ? '<p class="err" role="alert">' + esc(S.err) + "</p>" : "") + '</div><footer><span>' + (k > 0 ? '<button type="button" class="btn ghost" data-act="su-back">Back</button>' : '<button type="button" class="btn ghost" data-act="su-cancel">' + (demo || live ? "Cancel" : "Back") + "</button>") + "</span><span>" + (k > 0 && k < tot - 1 ? '<button type="button" class="btn link" data-act="su-skip">Skip for now</button>' : "") + '<button class="btn" type="submit">' + (k === tot - 1 ? "Open my workspace" : "Continue") + "</button></span></footer></form><p class=\"fine center\">" + ic("shield") + "Saved only in this browser. Nothing is sent to AIM servers.</p></div></div>";
-    var f = root.querySelector("input:not([type=checkbox]):not([type=radio])"); if (f && k < 4 && !lastRoute.startsWith("setup" + k)) { lastRoute = "setup" + k; f.focus(); window.scrollTo(0, 0); }
+    var f = root.querySelector("input:not([type=checkbox]):not([type=radio])"); if (!lastRoute.startsWith("setup" + k)) { lastRoute = "setup" + k; var sb = root.querySelector(".scard .body"); if (sb) enter(sb); if (f && k < 4) f.focus({ preventScroll: true }); window.scrollTo(0, 0); }
   }
   function setupSum(bi, be) { var f = bi - be; return '<div><small>Income</small><b class="num">' + M(bi) + '</b></div><div><small>Spending</small><b class="num">' + M(be) + '</b></div><div><small>Free cash flow</small><b class="num ' + (f < 0 ? "dn" : "up") + '">' + M(f) + "</b></div>"; }
   function setupNext(skip) {
@@ -842,12 +891,16 @@
     d.addEventListener("click", function (e) { if (e.target === d || e.target.closest("[data-close]")) closeModal(d); });
     var f = d.querySelector("input,button:not([data-close]),button"); if (f) f.focus(); return d;
   }
-  function closeModal(d) { d = d || $(".scrim"); if (!d) return; d.remove(); if (lastFocus && document.body.contains(lastFocus)) try { lastFocus.focus({ preventScroll: true }); } catch (e) { } }
+  function closeModal(d) {
+    d = d || $(".scrim"); if (!d || d.classList.contains("out")) return;
+    if (REDUCED) d.remove(); else { d.classList.add("out"); setTimeout(function () { d.remove(); }, 150); }
+    if (lastFocus && document.body.contains(lastFocus)) try { lastFocus.focus({ preventScroll: true }); } catch (e) { }
+  }
   function toast(t, label, fn) {
     $$(".toast").forEach(function (x) { x.remove(); });
     var d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "status"); d.textContent = t;
     if (label) { var b = document.createElement("button"); b.textContent = label; b.addEventListener("click", function () { d.remove(); fn(); }); d.appendChild(b); }
-    document.body.appendChild(d); setTimeout(function () { d.remove(); }, label ? 7000 : 2600);
+    document.body.appendChild(d); setTimeout(function () { if (!d.isConnected) return; d.classList.add("out"); setTimeout(function () { d.remove(); }, 220); }, label ? 7000 : 2600);
   }
   function howScore() {
     var s = st.settings;
@@ -1027,6 +1080,7 @@
     var b = e.target.closest("[data-act]"); if (!b) return; var a = b.dataset.act, o = findOpp(), S;
     switch (a) {
       case "mode": switchMode(b.dataset.v); break;
+      case "rail": var col = !document.documentElement.classList.contains("rail-collapsed"); document.documentElement.classList.toggle("rail-collapsed", col); try { localStorage.setItem("aim.rail", col ? "1" : "0"); } catch (er) { } b.setAttribute("aria-label", col ? "Expand the sidebar" : "Collapse the sidebar"); setTimeout(function () { moveIndicator(route().v === "opp" ? "opportunities" : route().v); Object.keys(chartReg).forEach(function (id) { if (document.getElementById(id)) drawChart(id, chartReg[id]); }); }, 240); break;
       case "palette": palette(); break;
       case "su-back": S = setupState(); S.err = ""; S.step = Math.max(0, S.step - 1); lastRoute = ""; renderSetup(); break;
       case "su-skip": setupNext(true); break;
