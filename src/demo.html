@@ -9,32 +9,32 @@
 {{CSS:shared}}
 /* Layout: navy top bar; white page split into the promise on the left and the request form on the right */
 .demo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,480px);gap:56px;padding-block:56px 72px;align-items:start}
-.demo h1{font-size:clamp(34px,4.6vw,52px);margin-top:16px}
-.demo .lede{font-size:18px;color:var(--muted);margin-top:18px;max-width:50ch}
+.demo h1{font-size:clamp(34px,4.4vw,52px);line-height:1.15;margin-top:16px}
+.demo .lede{font-size:18px;line-height:1.65;color:var(--muted);margin-top:20px;max-width:48ch}
 .gets{list-style:none;padding:0;margin:30px 0 0;display:flex;flex-direction:column;gap:16px}
 .gets li{display:grid;grid-template-columns:28px 1fr;gap:12px}
 .gets svg{width:22px;height:22px;color:var(--navy);margin-top:2px}
-.gets b{display:block;font-weight:600}
-.gets span{color:var(--muted);font-size:15px}
+.gets b{display:block;font-weight:600;line-height:1.4}
+.gets span{color:var(--muted);font-size:15px;line-height:1.6}
 .formcard{border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:12px;padding:28px;background:var(--panel);box-shadow:var(--shadow)}
-.formcard h2{font-size:24px}
-.formcard .sub{color:var(--muted);font-size:14.5px;margin-top:6px}
+.formcard h2{font-size:25px;line-height:1.2}
+.formcard .sub{color:var(--muted);font-size:15px;line-height:1.5;margin-top:8px}
 form .fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
 .fld{display:flex;flex-direction:column;gap:6px;min-width:0}
 .fld.full{grid-column:1/-1}
-.fld label{font-size:13.5px;color:var(--ink);font-weight:500}
+.fld label{font-size:14px;line-height:1.4;color:var(--ink);font-weight:500}
 .fld label em{font-style:normal;color:var(--faint);font-weight:400}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.opts label{display:flex;gap:8px;align-items:center;border:1px solid var(--line-2);border-radius:6px;padding:9px 10px;font-size:14px;color:var(--ink);cursor:pointer;font-weight:400}
+.opts label{display:flex;gap:8px;align-items:center;border:1px solid var(--line-2);border-radius:6px;padding:9px 11px;font-size:14.5px;line-height:1.4;color:var(--ink);cursor:pointer;font-weight:400}
 .opts label:has(input:checked){border-color:var(--navy);background:var(--tint)}
 .err{color:var(--bad);font-size:13px;min-height:0}
 input[aria-invalid="true"]{border-color:var(--bad)}
 .submit{margin-top:20px;width:100%;padding:15px}
-.fine{font-size:12.5px;color:var(--faint);margin-top:12px;text-align:center}
+.fine{font-size:13px;line-height:1.5;color:var(--faint);margin-top:14px;text-align:center}
 .done{text-align:center;padding:12px 4px}
 .done .check{width:56px;height:56px;border-radius:50%;background:var(--tint);color:var(--navy);display:grid;place-items:center;margin:0 auto 16px}
-.done h2{font-size:26px}
-.done p{color:var(--muted);margin-top:10px}
+.done h2{font-size:26px;line-height:1.2}
+.done p{color:var(--muted);margin-top:12px;line-height:1.6}
 .done-acts{display:flex;flex-direction:column;gap:10px;margin-top:22px}
 .done .btn{width:100%;padding:15px}
 @media (max-width:900px){.demo{grid-template-columns:1fr;gap:36px;padding-block:36px 56px}}
