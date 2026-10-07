@@ -19,7 +19,12 @@ During the beta all workspace data is saved in the visitor's browser. No server 
 ## Publish on GitHub Pages
 Settings, then Pages. Source: Deploy from a branch. Branch: `main`, folder `/docs`.
 
-## Collect demo requests by email
+## Tests
+* `node tests/engine.test.js` checks the math against known answers (amortization tables, IRR, break even points, target prices).
+* `cd tests && python3 check.py` checks 300 random deals per model against an independent Python implementation.
+* `python3 tests/qa.py` clicks through the whole site in a headless browser (serve `docs/` on port 8766 first, needs Playwright).
+
+## Collect demo requests and feedback by email
 1. Create a free form at formspree.io and copy its endpoint.
 2. Run `AIM_FORM_ENDPOINT="https://formspree.io/f/yourid" python3 build.py`
-3. Commit and push. Each demo request is then emailed to you.
+3. Commit and push. Each demo request is then emailed to you, and a Send feedback button appears in the app.

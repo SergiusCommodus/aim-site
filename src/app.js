@@ -2,7 +2,9 @@
 (function () {
   "use strict";
   var M = AIM.money, P = AIM.pct, R = AIM.ratio, num = AIM.num;
-  var KEY = "aim.workspace.v1", LEAD = "aim.lead.v1";
+  var KEY = "aim.workspace.v1", LEAD = "aim.lead.v1", VERSION = "Beta 0.9";
+  var FEEDBACK_URL = "{{FORM_ENDPOINT}}"; if (FEEDBACK_URL.indexOf("{{") === 0) FEEDBACK_URL = "";
+  var EMBEDDED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -59,8 +61,14 @@
         { id: uid(), name: "Vehicle", type: "Other asset", value: 21000 }, { id: uid(), name: "Auto loan", type: "Liability", value: 14800 },
         { id: uid(), name: "Credit card balance", type: "Liability", value: 1200 }
       ],
-      opps: opps, history: [], lessonsDone: ["cap", "coc"], welcomed: false
+      opps: opps, history: [], lessonsDone: ["cap", "coc"], welcomed: false, onb: {}
     };
+    var today = new Date().toISOString();
+    opps.forEach(function (o) { o.log = [{ date: today, text: "Analysis created" }]; });
+    opps[3].log = [{ date: "2025-01-14T15:00:00.000Z", text: "Analysis created" }, { date: "2025-02-03T15:00:00.000Z", text: "Offer accepted at $205,000" }, { date: "2025-03-21T15:00:00.000Z", text: "Marked as Owned" }];
+    opps[3].checks = AIM.CHECKLISTS.rental.map(function () { return true; });
+    opps[4].log.push({ date: today, text: "Marked as Passed. Seller would not move on price." });
+    opps[0].checks = [true, true, true, false, false, false, true];
     var nw = netWorthOf(ws).total;
     for (var j = 11; j >= 1; j--) ws.history.push({ month: addMonths(NOW, -j), value: Math.round(nw * Math.pow(0.986, j) + (j % 3 === 0 ? -1800 : 900)) });
     ws.history.push({ month: NOW, value: Math.round(nw) });
@@ -93,7 +101,9 @@
     var reserve = b.expenses * st.settings.reserveMonths, nw = netWorthOf(st);
     return { settings: st.settings, budget: st.budget, opps: st.opps, cash: cash, reserve: reserve, available: Math.max(0, cash - reserve), netWorth: nw.total, ownedEquity: nw.ownedEquity };
   }
-  function scoreOf(o, c) { return AIM.score(o.type, o.inputs, c || ctx()); }
+  function scoreOf(o, c) { c = c || ctx(); if (o.status === "Owned") c = Object.assign({}, c, { available: null }); return AIM.score(o.type, o.inputs, c); }
+  function logEvent(o, text) { o.log = o.log || []; o.log.push({ date: new Date().toISOString(), text: text }); }
+  function onb(k) { st.onb = st.onb || {}; if (!st.onb[k]) { st.onb[k] = true; save(); } }
   function gradeClass(g) { return "s-" + g.toLowerCase(); }
   function ownedPerf(o) {
     var r = AIM.run(o.type, o.inputs), planRev = r.type === "business" ? r.inputs.revenue / 12 : r.egi / 12;
@@ -234,7 +244,7 @@
     root.innerHTML = '<div class="app"><nav class="rail" aria-label="App">' + NAV.map(function (n) {
       if (n[0] === "sep") return '<div class="sep"></div>';
       return '<a href="#' + n[0] + '"' + (cur === n[0] ? ' aria-current="page"' : "") + ">" + ic(n[2]) + "<span>" + n[1] + "</span></a>";
-    }).join("") + '<div class="foot">AIM gives analysis and education, not investment, tax, or legal advice.</div></nav><main class="main" id="main">' + VIEWS[view](r) + "</main></div>";
+    }).join("") + (FEEDBACK_URL ? '<div class="sep"></div><a href="#" data-act="feedback">' + ic("bot") + "<span>Send feedback</span></a>" : "") + '<div class="foot">AIM ' + VERSION + '<br>Analysis and education, not investment, tax, or legal advice.</div></nav><main class="main" id="main">' + VIEWS[view](r) + "</main></div>";
     bindCharts();
     if (VIEWS[view].after) VIEWS[view].after(r);
     var rk = location.hash + "|" + ui.tab + "|" + ui.lesson;
@@ -264,6 +274,11 @@
       '<div class="card kpi"><small>Cash available to invest</small><strong>' + M(c.available) + "</strong><span>After your " + M(c.reserve) + " reserve</span></div>" +
       '<div class="card kpi"><small>Monthly free cash flow</small><strong>' + signed(b.fcf) + "</strong><span>" + M(b.income) + " in, " + M(b.expenses) + " out</span></div>" +
       '<div class="card kpi"><small>Savings rate</small><strong>' + P(b.savingsRate, 0) + "</strong><span>Of monthly income</span></div></div>";
+    var steps = [["targets", "Set your return targets", "settings"], ["budget", "Enter your real budget", "budget"], ["deal", "Analyze a deal of your own", "opportunities"], ["bot", "Ask AIMBot a question", "aimbot"], ["lesson", "Finish an AIM Learning lesson", "learn"]];
+    var on = st.onb || {}, doneN = steps.filter(function (x) { return on[x[0]]; }).length;
+    if (!st.onbHidden && doneN < steps.length) h += '<section class="card" style="margin-bottom:18px"><header><h2>Get started</h2><span style="display:flex;gap:10px;align-items:center"><span class="muted num" style="font-size:13px">' + doneN + " of " + steps.length + '</span><button class="btn sm link" data-act="hide-onb">Hide</button></span></header><div class="onb">' + steps.map(function (x) {
+      return '<a class="step' + (on[x[0]] ? " done" : "") + '" href="#' + x[2] + '"><span class="tick" aria-hidden="true">' + (on[x[0]] ? "✓" : "") + "</span><span>" + x[1] + '</span><span class="sr">' + (on[x[0]] ? "done" : "not done") + "</span></a>";
+    }).join("") + "</div></section>";
     h += '<div class="grid split"><div class="stack">';
     h += '<section class="card"><header><h2>Needs your attention</h2><span class="muted" style="font-size:13px">' + att.length + " items</span></header>" + (att.length ? att.map(function (a) {
       return '<div class="att"><span class="flag" style="padding:0;border:0"><span class="sev ' + a.sev + '"></span></span><div><b>' + esc(a.title) + "</b><p>" + esc(a.text) + "</p></div>" + (a.go ? '<a class="btn sm ghost" href="#' + a.go + '">Open</a>' : "<span></span>") + "</div>";
@@ -301,14 +316,16 @@
   }
 
   VIEWS.opportunities = function () {
-    var c = ctx(), list = st.opps.filter(function (o) { return ui.filter === "All" || o.status === ui.filter; });
+    var c = ctx(), q = (ui.q || "").toLowerCase(), list = st.opps.filter(function (o) { return (ui.filter === "All" || o.status === ui.filter) && (!q || (o.name + " " + (o.location || "") + " " + TYPE[o.type]).toLowerCase().indexOf(q) >= 0); });
+    var scored = list.map(function (o) { return { o: o, sc: scoreOf(o, c) }; }), sort = ui.sort || "score";
+    scored.sort(function (a, b) { return sort === "score" ? b.sc.total - a.sc.total : sort === "cf" ? b.sc.r.cfYear - a.sc.r.cfYear : sort === "cash" ? a.sc.r.cash - b.sc.r.cash : sort === "name" ? a.o.name.localeCompare(b.o.name) : 0; });
     var counts = { All: st.opps.length }; st.opps.forEach(function (o) { counts[o.status] = (counts[o.status] || 0) + 1; });
     var h = '<div class="ph"><div><h1>Opportunities</h1><p>Every deal you have analyzed, from first look to ownership.</p></div><div class="actions"><button class="btn" data-act="new-opp">New analysis</button></div></div>';
-    h += '<div class="chips" style="margin-bottom:16px" role="group" aria-label="Filter by status">' + ["All", "Evaluating", "Owned", "Passed"].map(function (f) { return '<button class="chip" data-act="filter" data-v="' + f + '" aria-pressed="' + (ui.filter === f) + '">' + f + " " + (counts[f] || 0) + "</button>"; }).join("") + "</div>";
-    if (!list.length) return h + '<div class="card empty">No opportunities here yet. <button class="btn sm link" data-act="new-opp">Start an analysis</button></div>';
+    h += '<div class="toolbar"><div class="chips" role="group" aria-label="Filter by status">' + ["All", "Evaluating", "Owned", "Passed"].map(function (f) { return '<button class="chip" data-act="filter" data-v="' + f + '" aria-pressed="' + (ui.filter === f) + '">' + f + " " + (counts[f] || 0) + "</button>"; }).join("") + '</div><div class="tools"><label for="oppSearch" class="sr">Search</label><input id="oppSearch" type="search" placeholder="Search by name or place" value="' + esc(ui.q || "") + '"><label for="oppSort" class="sr">Sort</label><select id="oppSort">' + [["score", "Sort by score"], ["cf", "Sort by cash flow"], ["cash", "Sort by cash needed"], ["name", "Sort by name"], ["recent", "Sort by most recent"]].map(function (x) { return '<option value="' + x[0] + '"' + (sort === x[0] ? " selected" : "") + ">" + x[1] + "</option>"; }).join("") + "</select></div></div>";
+    if (!list.length) return h + '<div class="card empty">' + (q ? "Nothing matches that search." : 'No opportunities here yet. <button class="btn sm link" data-act="new-opp">Start an analysis</button>') + "</div>";
     h += '<div class="card tw"><table><thead><tr><th>Opportunity</th><th>Status</th><th class="r">Price</th><th class="r">Cash needed</th><th class="r">Cash flow / yr</th><th class="r">Cash on cash</th><th class="r">DSCR</th><th class="r">Score</th></tr></thead><tbody>' +
-      list.map(function (o) {
-        var sc = scoreOf(o, c), r = sc.r;
+      scored.map(function (x) {
+        var o = x.o, sc = x.sc, r = sc.r;
         return '<tr class="click" data-go="opp-' + o.id + '"><td><div class="oname"><b>' + esc(o.name) + "</b><span>" + TYPE[o.type] + (o.location ? " · " + esc(o.location) : "") + "</span></div></td><td>" + statusPill(o.status) + '</td><td class="n">' + M(r.inputs.price) + '</td><td class="n">' + M(r.cash) + '</td><td class="n">' + signed(r.cfYear) + '</td><td class="n">' + P(r.coc) + '</td><td class="n">' + R(r.dscr) + '</td><td class="r"><span class="score ' + gradeClass(sc.grade) + '">' + sc.total + "</span></td></tr>";
       }).join("") + "</tbody></table></div>";
     return h;
@@ -351,7 +368,7 @@
     if (!o) return '<div class="card empty">We could not find that opportunity in this workspace. <a href="#opportunities">Back to opportunities</a></div>';
     if (ui.oppId !== o.id) { ui.oppId = o.id; ui.tab = "analysis"; }
     if (ui.tab === "ownership" && o.status !== "Owned") ui.tab = "analysis";
-    var tabs = [["analysis", "Analysis"], ["scenarios", "Scenarios and risk"]].concat(o.status === "Owned" ? [["ownership", "Ownership"]] : []).concat([["report", "Report"]]);
+    var tabs = [["analysis", "Analysis"], ["scenarios", "Scenarios and financing"]].concat(o.status === "Owned" ? [["ownership", "Ownership"]] : []).concat([["diligence", "Checklist and history"], ["report", "Report"]]);
     var h = '<div style="margin-bottom:6px"><a href="#opportunities" class="btn sm link" style="padding-left:0">← Opportunities</a></div>';
     h += '<div class="ph" style="align-items:center"><div style="min-width:0;flex:1"><span class="tag">' + TYPE[o.type] + '</span><div style="margin-top:8px"><label for="oppName" class="sr">Name</label><input id="oppName" class="title-in" value="' + esc(o.name) + '" data-meta="name"></div>' +
       '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;align-items:center"><label for="oppLoc" class="sr">Location</label><input id="oppLoc" data-meta="location" value="' + esc(o.location || "") + '" placeholder="City, state" style="width:220px;padding:6px 9px;font-size:14px"></div></div>' +
@@ -371,7 +388,7 @@
   function results(o) {
     var c = ctx(), sc = scoreOf(o, c), r = sc.r, tp = AIM.targetPrice(o.type, o.inputs, c.settings);
     var h = '<section class="card"><div class="verdict">' + dial(sc) + "<div>" + gradePill(sc) + '<h2 style="margin-top:8px">' + verdictTitle(sc) + "</h2><p>" + esc(AIM.recommendation(sc, tp)) + '</p><p class="tp">Most you should pay at your targets: <b>' + (tp == null ? "No workable price" : M(tp)) + "</b> · asking " + M(r.inputs.price) + "</p></div></div>" +
-      '<div class="parts">' + sc.parts.map(function (p) { return '<div class="part"><small>' + p.label + "</small><b>" + Math.round(p.pts) + "/" + p.max + '</b><div class="meter"><i style="width:' + (p.pts / p.max * 100).toFixed(0) + '%"></i></div></div>'; }).join("") + "</div></section>";
+      '<div class="parts">' + sc.parts.map(function (p) { return '<div class="part"><small>' + p.label + "</small><b>" + Math.round(p.pts) + "/" + p.max + '</b><div class="meter"><i style="width:' + (p.pts / p.max * 100).toFixed(0) + '%"></i></div></div>'; }).join("") + '</div><div class="howscore"><button class="btn sm link" data-act="how-score">How the AIM Score works</button></div></section>';
     var m;
     if (o.type === "rental") m = [["Cash flow", M(r.cfMonth), "per month"], ["Cash on cash", P(r.coc), "year one"], ["Cap rate", P(r.cap), "unlevered"], ["DSCR", R(r.dscr), "target " + c.settings.minDscr.toFixed(2)], ["Cash to close", M(r.cash), "down, closing, repairs"], ["Mortgage", M(r.pmt), "per month"], ["Break even", P(r.beOcc, 0), "occupancy"], ["Five year return", r.irr == null ? "n/a" : P(r.irr), "annualized, after sale"]];
     else if (o.type === "str") m = [["Cash flow", M(r.cfMonth), "per month"], ["Cash on cash", P(r.coc), "year one"], ["Cap rate", P(r.cap), "unlevered"], ["DSCR", R(r.dscr), "target " + c.settings.minDscr.toFixed(2)], ["Cash to close", M(r.cash), "includes furnishing"], ["Break even", isFinite(r.beOcc) ? P(r.beOcc, 0) : "Not reachable", "occupancy"], ["Break even rate", r.beAdr == null ? "n/a" : M(r.beAdr), "per night"], ["Revenue per night", M(r.revpar), "available night"]];
@@ -382,9 +399,20 @@
       h += '<section class="card"><header><h2>Monthly booking revenue</h2><span class="muted" style="font-size:13px">Seasonality applied</span></header><div class="body">' + chart("strm", MON, [{ name: "Revenue", color: "var(--c1)", values: r.monthly.map(function (x) { return x.revenue; }) }], { kind: "bar", h: 210, label: "Expected booking revenue by month", fmt: function (v) { return M(v); } }) + "</div></section>";
       h += '<section class="card"><header><h2>Short term or long term</h2></header><div class="tw"><table><thead><tr><th></th><th class="r">Short term</th><th class="r">Long term</th></tr></thead><tbody>' +
         [["Gross revenue", r.gross, r.ltr.gross], ["Net operating income", r.noi, r.ltr.noi], ["Cash flow per year", r.cfYear, r.ltr.cfYear], ["Cash to close", r.cash, r.ltr.cash]].map(function (x) { return "<tr><td>" + x[0] + '</td><td class="n">' + M(x[1]) + '</td><td class="n">' + M(x[2]) + "</td></tr>"; }).join("") +
-        "<tr><td>Cash on cash</td><td class=\"n\">" + P(r.coc) + '</td><td class="n">' + P(r.ltr.coc) + "</td></tr></tbody></table></div></section>";
+        "<tr><td>Cash on cash</td><td class=\"n\">" + P(r.coc) + '</td><td class="n">' + P(r.ltr.coc) + '</td></tr></tbody></table></div><div class="body note">The long term case uses the same price and loan with 5% vacancy, 8% management, 10% of rent for repairs and reserves, no furnishing, and insurance at 60% of the short term quote.</div></section>';
     }
     h += '<section class="card"><header><h2>' + (o.type === "business" ? "Earnings and cash flow" : "Annual operating statement") + '</h2></header><div class="tw"><table><tbody>' + r.lines.map(function (l) { return "<tr" + (l[2] ? ' class="' + l[2] + '"' : "") + "><td>" + l[0] + '</td><td class="n">' + M(l[1]) + "</td></tr>"; }).join("") + "</tbody></table></div></section>";
+    if (o.type !== "business" && r.loan > 0) {
+      var am = AIM.amortization(r.loan, r.inputs.rate, r.inputs.term), shown = ui.allYears ? am : am.slice(0, 10);
+      h += '<section class="card"><header><h2>Loan schedule</h2><span class="muted" style="font-size:13px">' + M(r.loan) + " at " + r.inputs.rate + "% for " + r.inputs.term + ' years</span></header><div class="tw"><table><thead><tr><th>Year</th><th class="r">Payments</th><th class="r">Interest</th><th class="r">Principal</th><th class="r">Balance</th></tr></thead><tbody>' +
+        shown.map(function (y) { return "<tr><td>" + y.year + '</td><td class="n">' + M(y.payment) + '</td><td class="n">' + M(y.interest) + '</td><td class="n">' + M(y.principal) + '</td><td class="n">' + M(y.balance) + "</td></tr>"; }).join("") + "</tbody></table></div>" +
+        (am.length > 10 ? '<div class="body" style="border-top:1px solid var(--line)"><button class="btn sm link" data-act="all-years">' + (ui.allYears ? "Show first 10 years" : "Show all " + am.length + " years") + "</button></div>" : "") + "</section>";
+    }
+    if (o.type === "business") {
+      var bs = [[r.bankLoan, r.inputs.bankRate, r.inputs.bankTerm, "Bank loan"], [r.sellerNote, r.inputs.sellerRate, r.inputs.sellerTerm, "Seller note"]].filter(function (x) { return x[0] > 0; });
+      if (bs.length) h += '<section class="card"><header><h2>Debt summary</h2></header><div class="tw"><table><thead><tr><th>Loan</th><th class="r">Amount</th><th class="r">Rate</th><th class="r">Term</th><th class="r">Yearly payments</th><th class="r">Total interest</th></tr></thead><tbody>' +
+        bs.map(function (x) { var p = AIM.Fin.pmt(x[0], x[1], x[2]); return "<tr><td>" + x[3] + '</td><td class="n">' + M(x[0]) + '</td><td class="n">' + x[1] + '%</td><td class="n">' + x[2] + ' yrs</td><td class="n">' + M(p * 12) + '</td><td class="n">' + M(p * Math.round(x[2] * 12) - x[0]) + "</td></tr>"; }).join("") + "</tbody></table></div></section>";
+    }
     if (o.type === "rental") {
       h += '<section class="card"><header><h2>Five year hold</h2><span class="muted" style="font-size:13px">Sale assumes 6% selling costs</span></header><div class="tw"><table><thead><tr><th>Year</th><th class="r">NOI</th><th class="r">Cash flow</th><th class="r">Loan balance</th><th class="r">Value</th><th class="r">Equity</th></tr></thead><tbody>' +
         r.projection.map(function (y) { return "<tr><td>" + y.year + '</td><td class="n">' + M(y.noi) + '</td><td class="n">' + signed(y.cf) + '</td><td class="n">' + M(y.balance) + '</td><td class="n">' + M(y.value) + '</td><td class="n">' + M(y.equity) + "</td></tr>"; }).join("") + "</tbody></table></div></section>";
@@ -403,11 +431,14 @@
       function bar(v, cls) { var w = Math.abs(v) / max * 50; return '<i class="' + cls + '" style="' + (v < 0 ? "right:50%" : "left:50%") + ";width:" + w.toFixed(1) + '%"></i>'; }
       return '<div class="row"><span>' + x.label + ' <span class="muted" style="font-size:12px">' + x.swing + '</span></span><div class="bar"><span class="mid"></span>' + bar(Math.min(x.up, x.down), "neg") + bar(Math.max(x.up, x.down), "pos") + '</div><span class="num" style="text-align:right">±' + M(x.impact) + "</span></div>";
     }).join("") + '<div class="legend"><span><i style="background:var(--c6)"></i>Unfavorable move</span><span><i style="background:var(--c1)"></i>Favorable move</span></div></div></section></div>';
+    var fin = AIM.financing(o.type, o.inputs, c.settings);
+    var finHtml = '<section class="card" style="margin-top:18px"><header><h2>Financing options</h2><span class="muted" style="font-size:13px">Same deal, different down payment</span></header><div class="tw"><table><thead><tr><th>Down</th><th class="r">Cash needed</th><th class="r">Payment / mo</th><th class="r">Cash flow / yr</th><th class="r">Cash on cash</th><th class="r">DSCR</th><th>Targets</th></tr></thead><tbody>' +
+      fin.map(function (f) { return "<tr" + (f.current ? ' class="sub"' : "") + "><td>" + f.down + "%" + (f.current ? ' <span class="muted" style="font-size:12px">current</span>' : "") + '</td><td class="n">' + M(f.cash) + '</td><td class="n">' + M(f.pmt) + '</td><td class="n">' + signed(f.cfYear) + '</td><td class="n">' + P(f.coc) + '</td><td class="n">' + R(f.dscr) + "</td><td>" + (f.meets ? '<span class="pill good">Meets</span>' : '<span class="pill warn">Misses</span>') + "</td></tr>"; }).join("") + '</tbody></table></div><div class="body note">More cash down lowers the payment and raises coverage, but usually lowers your return on each dollar invested.</div></section>';
     var gap = r.cash - c.available, b = AIM.budget(st.budget);
-    h += '<div class="stack"><section class="card"><header><h2>Can you afford it?</h2></header><div class="body"><div class="mgrid" style="grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px"><div class="m"><small>Cash needed</small><strong>' + M(r.cash) + '</strong></div><div class="m" style="border-right:0"><small>Available after reserve</small><strong>' + M(c.available) + "</strong></div></div><p style=\"margin-top:14px\">" +
-      (gap <= 0 ? "You can fund this and still keep your full " + M(c.reserve) + " emergency reserve. " + M(-gap) + " would remain available." : "You are " + M(gap) + " short after holding back your reserve." + (b.fcf > 0 ? " At your current " + M(b.fcf) + " of monthly free cash flow, you close the gap in about <b>" + Math.ceil(gap / b.fcf) + " months</b>." : "")) + "</p></div></section>";
-    var all = AIM.score(o.type, o.inputs, c);
-    h += '<section class="card"><header><h2>Risk flags</h2></header>' + (all.flags.length ? all.flags.map(flagRow).join("") : '<div class="empty">No flags at these assumptions.</div>') + "</section></div></div>";
+    h += '<div class="stack">' + (o.status === "Owned" ? "" : '<section class="card"><header><h2>Can you afford it?</h2></header><div class="body"><div class="mgrid" style="grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px"><div class="m"><small>Cash needed</small><strong>' + M(r.cash) + '</strong></div><div class="m" style="border-right:0"><small>Available after reserve</small><strong>' + M(c.available) + "</strong></div></div><p style=\"margin-top:14px\">" +
+      (gap <= 0 ? "You can fund this and still keep your full " + M(c.reserve) + " emergency reserve. " + M(-gap) + " would remain available." : "You are " + M(gap) + " short after holding back your reserve." + (b.fcf > 0 ? " At your current " + M(b.fcf) + " of monthly free cash flow, you close the gap in about <b>" + Math.ceil(gap / b.fcf) + " months</b>." : "")) + "</p></div></section>");
+    var all = scoreOf(o, c);
+    h += '<section class="card"><header><h2>Risk flags</h2></header>' + (all.flags.length ? all.flags.map(flagRow).join("") : '<div class="empty">No flags at these assumptions.</div>') + "</section></div></div>" + finHtml;
     return h;
   };
 
@@ -423,6 +454,18 @@
     return h;
   };
 
+  TABS.diligence = function (o) {
+    var items = AIM.CHECKLISTS[o.type], checks = o.checks || [], custom = o.custom || [];
+    var total = items.length + custom.length, done = items.filter(function (x, i) { return checks[i]; }).length + custom.filter(function (x) { return x.done; }).length;
+    var h = '<div class="grid split" style="align-items:start"><section class="card"><header><h2>Due diligence checklist</h2><span class="muted num" style="font-size:13px">' + done + " of " + total + '</span></header><div class="body" style="padding-bottom:4px"><div class="bar-p"><i style="width:' + (total ? done / total * 100 : 0).toFixed(0) + '%"></i></div></div><ul class="checks">' +
+      items.map(function (t, i) { return '<li><label><input type="checkbox" data-check="' + i + '"' + (checks[i] ? " checked" : "") + "><span>" + esc(t) + "</span></label></li>"; }).join("") +
+      custom.map(function (x) { return '<li><label><input type="checkbox" data-custom="' + x.id + '"' + (x.done ? " checked" : "") + "><span>" + esc(x.text) + '</span></label><button class="x" data-act="del-check" data-id="' + x.id + '" aria-label="Remove item">×</button></li>'; }).join("") +
+      '</ul><form class="composer" id="checkForm" style="border-top:1px solid var(--line)"><label for="checkIn" class="sr">New checklist item</label><input id="checkIn" placeholder="Add your own item"><button class="btn sm" type="submit">Add</button></form></section>';
+    var log = (o.log || []).slice().reverse();
+    h += '<section class="card"><header><h2>Decision history</h2></header><ol class="timeline">' + (log.length ? log.map(function (l) { return "<li><time>" + new Date(l.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + "</time><span>" + esc(l.text) + "</span></li>"; }).join("") : '<li class="empty">No history yet.</li>') +
+      '</ol><form class="composer" id="logForm" style="border-top:1px solid var(--line)"><label for="logIn" class="sr">Add a note to the history</label><input id="logIn" placeholder="Log a call, offer, or decision"><button class="btn sm" type="submit">Log</button></form></section></div>';
+    return h;
+  };
   function reportText(o) {
     var c = ctx(), sc = scoreOf(o, c), r = sc.r, tp = AIM.targetPrice(o.type, o.inputs, c.settings), sn = AIM.sensitivity(o.type, o.inputs).slice(0, 3), scen = AIM.scenarios(o.type, o.inputs);
     var thesis = o.type === "business" ? M(r.inputs.price) + " acquisition at " + r.multiple.toFixed(2) + "x SDE of " + M(r.sde) + ", financed with " + r.inputs.down + "% down, a bank loan, and a " + r.inputs.sellerPct + "% seller note."
@@ -436,12 +479,14 @@
   }
   TABS.report = function (o) {
     var t = reportText(o);
-    return '<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px"><button class="btn sm" data-act="copy-report" data-id="' + o.id + '">Copy summary</button></div><article class="card doc"><span class="eyebrow">AIM investment summary · ' + new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) + "</span><h2>" + esc(t.title) + '</h2><p class="muted" style="margin-top:6px">' + esc(t.sub) + '</p><div style="display:flex;gap:12px;align-items:center;margin-top:16px">' + gradePill(t.score) + '<span class="num">AIM Score ' + t.score.total + "/100</span></div>" +
+    var items = AIM.CHECKLISTS[o.type], checks = o.checks || [], dn = items.filter(function (x, i) { return checks[i]; }).length + (o.custom || []).filter(function (x) { return x.done; }).length, tot = items.length + (o.custom || []).length;
+    t.diligence = dn + " of " + tot + " checklist items complete";
+    return '<div class="noprint" style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">' + (EMBEDDED ? "" : '<button class="btn sm ghost" data-act="print">Print or save as PDF</button>') + '<button class="btn sm" data-act="copy-report" data-id="' + o.id + '">Copy summary</button></div><article class="card doc"><span class="eyebrow">AIM investment summary · ' + new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) + "</span><h2>" + esc(t.title) + '</h2><p class="muted" style="margin-top:6px">' + esc(t.sub) + '</p><div style="display:flex;gap:12px;align-items:center;margin-top:16px">' + gradePill(t.score) + '<span class="num">AIM Score ' + t.score.total + "/100</span></div>" +
       "<h3>Thesis</h3><p>" + esc(t.thesis) + "</p><h3>Recommendation</h3><p>" + esc(t.rec) + "</p>" +
       '<h3>Key numbers</h3><div class="mgrid" style="grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:6px">' + t.metrics.map(function (m) { return '<div class="m"><small>' + m[0] + "</small><strong>" + m[1] + "</strong></div>"; }).join("") + "</div>" +
       "<h3>Assumptions that matter most</h3><ul>" + t.drivers.map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("") + "</ul>" +
       "<h3>Risks</h3>" + (t.flags.length ? "<ul>" + t.flags.map(function (f) { return "<li><b>" + esc(f.title) + ".</b> " + esc(f.detail) + "</li>"; }).join("") + "</ul>" : "<p>No flags at the current assumptions.</p>") +
-      "<h3>Next steps</h3><ul>" + t.next.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul>" +
+      "<h3>Due diligence</h3><p>" + esc(t.diligence) + ".</p><h3>Next steps</h3><ul>" + t.next.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul>" +
       (o.notes ? "<h3>Notes</h3><p>" + esc(o.notes) + "</p>" : "") + '<p class="muted" style="font-size:12.5px;margin-top:28px">Prepared with AIM from the assumptions entered. Analysis and education only, not investment, tax, or legal advice.</p></article>';
   };
   function reportPlain(o) {
@@ -536,7 +581,7 @@
   function ask(q) {
     if (!q.trim()) return;
     var opp = st.opps.filter(function (o) { return o.id === ui.chatOpp; })[0] || null;
-    ui.chat.push({ me: true, html: q }); ui.chat.push({ me: false, html: LEARN.answer(q, ctx(), opp) });
+    onb("bot"); ui.chat.push({ me: true, html: q }); ui.chat.push({ me: false, html: LEARN.answer(q, ctx(), opp) });
     render(); var i = $("#botIn"); if (i) i.focus();
   }
 
@@ -566,13 +611,39 @@
       '<div class="f"><label for="s-dscr">Minimum DSCR</label><input id="s-dscr" type="number" step="0.05" value="' + s.minDscr + '" data-set="minDscr"></div>' +
       '<div class="f"><label for="s-res">Emergency reserve</label><div class="inwrap post"><input id="s-res" type="number" step="1" value="' + s.reserveMonths + '" data-set="reserveMonths"><span class="u">mos</span></div></div></div></div></section>';
     h += '<section class="card"><header><h2>Workspace</h2></header><div class="body" style="display:flex;flex-direction:column;gap:14px"><p class="muted" style="font-size:14px">Your workspace is saved in this browser on this device. It is not sent to AIM servers during the beta.</p>' +
-      '<div class="confirm" id="resetRow"><button class="btn ghost" data-act="ask-reset" data-v="sample">Reload the sample portfolio</button><button class="btn ghost" data-act="ask-reset" data-v="empty">Start an empty workspace</button></div><div id="confirmSlot"></div></div></section></div>';
+      '<div><b style="font-size:14.5px">Backup and restore</b><p class="muted" style="font-size:13.5px;margin-top:4px">Keep a copy of your workspace, or move it to another browser or device.</p><div class="confirm" style="margin-top:10px">' + (EMBEDDED ? "" : '<button class="btn ghost sm" data-act="backup-dl">Download backup</button>') + '<button class="btn ghost sm" data-act="backup-copy">Copy backup</button><label class="btn ghost sm" for="restoreFile" style="cursor:pointer">Restore from file</label><input id="restoreFile" type="file" accept="application/json,.json" class="sr"></div><div id="restoreSlot"></div></div>' +
+      '<div class="confirm" id="resetRow"><button class="btn ghost" data-act="ask-reset" data-v="sample">Reload the sample portfolio</button><button class="btn ghost" data-act="ask-reset" data-v="empty">Start an empty workspace</button></div><div id="confirmSlot"></div><p class="muted" style="font-size:12.5px">AIM ' + VERSION + "</p></div></section></div>";
     return h;
   };
 
   /* ---------- modal ---------- */
   function modal(html) { var d = document.createElement("div"); d.className = "scrim"; d.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + "</div>"; document.body.appendChild(d); d.addEventListener("click", function (e) { if (e.target === d || e.target.closest("[data-close]")) d.remove(); }); var f = d.querySelector("input,button"); if (f) f.focus(); return d; }
-  function toast(t) { var d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "status"); d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2200); }
+  function toast(t, label, fn) {
+    $$(".toast").forEach(function (x) { x.remove(); });
+    var d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "status"); d.textContent = t;
+    if (label) { var b = document.createElement("button"); b.textContent = label; b.addEventListener("click", function () { d.remove(); fn(); }); d.appendChild(b); }
+    document.body.appendChild(d); setTimeout(function () { d.remove(); }, label ? 7000 : 2400);
+  }
+  function howScore() {
+    var s = st.settings;
+    modal('<header><h2>How the AIM Score works</h2><button class="x" data-close aria-label="Close">×</button></header><div class="body prose" style="font-size:14.5px"><p>The score sums five parts, 100 points in all. It always uses your own targets from Settings.</p><div class="tw"><table><tbody>' +
+      [["Return", "30", "Full points at 1.5 times your " + s.minCoc + "% cash on cash target."], ["Debt coverage", "25", "Zero at 1.00, full at 1.50 or better."], ["Downside resilience", "20", "Coverage in the downside case. Zero at 0.90, full at 1.40."], ["Fits your cash", "15", "Cash available after your reserve, compared to cash needed. Not counted for assets you own."], ["Assumption quality", "10", "Loses points for assumptions that look optimistic, like very low vacancy or repairs."]].map(function (r) { return "<tr><td><b>" + r[0] + '</b></td><td class="n">' + r[1] + '</td><td style="font-size:13.5px;color:var(--muted)">' + r[2] + "</td></tr>"; }).join("") +
+      '</tbody></table></div><p>80 and up is Strong, 65 to 79 Workable, 50 to 64 Marginal, and below 50 Weak. The score is a summary. The numbers behind it decide.</p></div><footer><button class="btn" data-close>Got it</button></footer>');
+  }
+  function feedback() {
+    var d = modal('<header><h2>Send feedback</h2><button class="x" data-close aria-label="Close">×</button></header><form id="fbForm"><div class="body"><div class="f"><label for="fbType">Type</label><select id="fbType"><option>Idea</option><option>Something is wrong</option><option>Question</option></select></div><div class="f"><label for="fbMsg">Message</label><textarea id="fbMsg" rows="5" required placeholder="What would make AIM more useful?"></textarea></div><p class="err" id="fbErr" style="color:var(--bad);font-size:13px"></p></div><footer><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn" type="submit">Send</button></footer></form>');
+    $("#fbForm", d).addEventListener("submit", function (e) {
+      e.preventDefault(); var msg = $("#fbMsg", d).value.trim(); if (!msg) { $("#fbErr", d).textContent = "Write a short message first."; return; }
+      var body = { kind: "feedback", type: $("#fbType", d).value, message: msg, name: lead && lead.name, email: lead && lead.email, page: location.hash, version: VERSION, sent_at: new Date().toISOString() };
+      fetch(FEEDBACK_URL, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" }, body: JSON.stringify(body) })
+        .then(function (r) { if (!r.ok) throw 0; d.remove(); toast("Thanks. Your feedback was sent."); })
+        .catch(function () { $("#fbErr", d).textContent = "That did not send. Check your connection and try again."; });
+    });
+  }
+  function download(name, text) { var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+  function copyText(t, ok) { try { navigator.clipboard.writeText(t).then(function () { toast(ok); }, function () { fallbackCopy(t, ok); }); } catch (err) { fallbackCopy(t, ok); } }
+  var pendingRestore = null;
+  function validWs(x) { return x && typeof x === "object" && Array.isArray(x.opps) && Array.isArray(x.accounts) && x.budget && Array.isArray(x.budget.income) && x.settings; }
   function newOpp() {
     var d = modal('<header><h2>New analysis</h2><button class="x" data-close aria-label="Close">×</button></header><form id="newForm"><div class="body"><fieldset style="padding:0;border:0"><legend class="sr">Type</legend><div class="types">' +
       [["rental", "Long term rental", "Single family, duplex, small multifamily"], ["str", "Short term rental", "Vacation homes and Airbnb style units"], ["business", "Business", "Laundromats, services, routes, and more"]].map(function (t, i) { return '<label><input type="radio" name="t" value="' + t[0] + '"' + (i === 0 ? " checked" : "") + ' class="sr"><b>' + t[1] + "</b><span>" + t[2] + "</span></label>"; }).join("") +
@@ -581,7 +652,7 @@
       e.preventDefault(); var t = $("input[name=t]:checked", d).value, n = $("#nName", d).value.trim();
       if (!n) { $("#nName", d).focus(); return; }
       var o = { id: uid(), type: t, name: n, location: $("#nLoc", d).value.trim(), status: "Evaluating", created: NOW, notes: "", inputs: Object.assign({}, AIM.DEFAULTS[t]) };
-      st.opps.unshift(o); save(); d.remove(); ui.tab = "analysis"; go("opp-" + o.id);
+      logEvent(o, "Analysis created"); onb("deal"); st.opps.unshift(o); save(); d.remove(); ui.tab = "analysis"; go("opp-" + o.id);
     });
   }
 
@@ -593,6 +664,9 @@
   }
   document.addEventListener("input", function (e) {
     var t = e.target, o, d = t.dataset;
+    if (t.id === "oppSearch") { ui.q = t.value; clearTimeout(refreshT); refreshT = setTimeout(render, 160); return; }
+    if (d.set && d.set !== "name") onb("targets");
+    if (d.line || d.goal) onb("budget");
     if (d.field && (o = findOpp())) { o.inputs[d.field] = t.tagName === "SELECT" ? t.value : num(t.value); save(); refreshResults(); return; }
     if (d.meta && (o = findOpp())) { if (d.meta !== "status") { o[d.meta] = t.value; save(); } return; }
     if (d.line) { var x = st.budget[d.line].filter(function (i) { return i.id === d.id; })[0]; if (x) { x[d.k] = d.k === "amount" ? num(t.value) : t.value; save(); } return; }
@@ -605,31 +679,55 @@
   document.addEventListener("change", function (e) {
     var t = e.target, d = t.dataset, o;
     if (t.id === "botOpp") { ui.chatOpp = t.value || ""; return; }
+    if (t.id === "oppSort") { ui.sort = t.value; render(); return; }
+    if (d.check != null && (o = findOpp())) { o.checks = o.checks || []; o.checks[+d.check] = t.checked; save(); later(); return; }
+    if (d.custom && (o = findOpp())) { (o.custom || []).forEach(function (x) { if (x.id === d.custom) x.done = t.checked; }); save(); later(); return; }
+    if (t.id === "restoreFile" && t.files && t.files[0]) {
+      var rd = new FileReader(); rd.onload = function () {
+        var slot = $("#restoreSlot"), x; try { x = JSON.parse(rd.result); if (x && x.workspace) x = x.workspace; } catch (err) { x = null; }
+        if (!validWs(x)) { slot.innerHTML = '<p class="dn" style="font-size:13.5px;margin-top:8px">That file is not an AIM backup. Choose a file saved with Download backup.</p>'; return; }
+        pendingRestore = x; slot.innerHTML = '<div class="banner" style="margin:10px 0 0"><span>Replace this workspace with the backup (' + x.opps.length + ' opportunities)? Your current data will be overwritten.</span><span class="confirm"><button class="btn sm ghost" data-act="cancel-restore">Cancel</button><button class="btn sm danger" data-act="do-restore">Restore</button></span></div>';
+      }; rd.readAsText(t.files[0]); t.value = ""; return;
+    }
     if (d.meta === "status" && (o = findOpp())) {
-      o.status = t.value; if (o.status === "Owned" && !o.owned) o.owned = { since: NOW, value: AIM.run(o.type, o.inputs).inputs.price, actuals: [] };
+      o.status = t.value; logEvent(o, "Marked as " + o.status); if (o.status === "Owned" && !o.owned) o.owned = { since: NOW, value: AIM.run(o.type, o.inputs).inputs.price, actuals: [] };
       save(); toast("Marked as " + o.status); render(); return;
     }
     if (d.line || d.goal || d.acct || d.actId || d.own || d.set) later();
   });
-  document.addEventListener("submit", function (e) { if (e.target.id === "botForm") { e.preventDefault(); var i = $("#botIn"); ask(i.value); } });
+  document.addEventListener("submit", function (e) {
+    var id = e.target.id, o = findOpp();
+    if (id === "botForm") { e.preventDefault(); var i = $("#botIn"); ask(i.value); }
+    if (id === "checkForm" && o) { e.preventDefault(); var v = $("#checkIn").value.trim(); if (!v) return; o.custom = o.custom || []; o.custom.push({ id: uid(), text: v, done: false }); save(); render(); $("#checkIn").focus(); }
+    if (id === "logForm" && o) { e.preventDefault(); var w = $("#logIn").value.trim(); if (!w) return; logEvent(o, w); save(); render(); $("#logIn").focus(); }
+  });
   document.addEventListener("click", function (e) {
     var tr = e.target.closest("tr[data-go]"); if (tr && !e.target.closest("a,button,input,select")) { go(tr.dataset.go); return; }
     var b = e.target.closest("[data-act]"); if (!b) return; var a = b.dataset.act, o = findOpp();
     switch (a) {
       case "new-opp": newOpp(); break;
+      case "hide-onb": st.onbHidden = true; save(); render(); break;
+      case "how-score": howScore(); break;
+      case "feedback": e.preventDefault(); feedback(); break;
+      case "all-years": ui.allYears = !ui.allYears; var el = $("#results"); if (el && o) { el.innerHTML = results(o); bindCharts(); } break;
+      case "print": window.print(); break;
+      case "del-check": o.custom = (o.custom || []).filter(function (x) { return x.id !== b.dataset.id; }); save(); render(); break;
+      case "backup-dl": download("aim-backup-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify({ app: "AIM", version: VERSION, saved_at: new Date().toISOString(), workspace: st }, null, 2)); toast("Backup downloaded"); break;
+      case "backup-copy": copyText(JSON.stringify({ app: "AIM", version: VERSION, saved_at: new Date().toISOString(), workspace: st }), "Backup copied. Paste it into a text file to keep it."); break;
+      case "cancel-restore": pendingRestore = null; $("#restoreSlot").innerHTML = ""; break;
+      case "do-restore": if (pendingRestore) { st = pendingRestore; st.unlocked = true; pendingRestore = null; store(KEY, st); ui.compare = []; ui.chat = []; ui.chatOpp = null; toast("Workspace restored"); go("dashboard"); } break;
       case "welcomed": st.welcomed = true; save(); render(); break;
       case "filter": ui.filter = b.dataset.v; render(); break;
       case "tab": ui.tab = b.dataset.v; render(); break;
-      case "dup": var src = st.opps.filter(function (x) { return x.id === b.dataset.id; })[0], cp = JSON.parse(JSON.stringify(src)); cp.id = uid(); cp.name = src.name + " (copy)"; cp.status = "Evaluating"; delete cp.owned; st.opps.unshift(cp); save(); toast("Duplicated"); go("opp-" + cp.id); break;
+      case "dup": var src = st.opps.filter(function (x) { return x.id === b.dataset.id; })[0], cp = JSON.parse(JSON.stringify(src)); cp.id = uid(); cp.name = src.name + " (copy)"; cp.status = "Evaluating"; delete cp.owned; cp.log = []; logEvent(cp, "Duplicated from " + src.name); st.opps.unshift(cp); save(); toast("Duplicated"); go("opp-" + cp.id); break;
       case "del":
-        var dm = modal('<header><h2>Delete this analysis?</h2><button class="x" data-close aria-label="Close">×</button></header><div class="body"><p>' + esc(o.name) + ' and any logged months will be removed from this workspace. This cannot be undone.</p></div><footer><button class="btn ghost" data-close>Keep it</button><button class="btn danger" id="yesDel">Delete</button></footer>');
-        $("#yesDel", dm).addEventListener("click", function () { st.opps = st.opps.filter(function (x) { return x.id !== o.id; }); save(); dm.remove(); toast("Deleted"); go("opportunities"); });
+        var idx = st.opps.indexOf(o); st.opps.splice(idx, 1); save(); go("opportunities");
+        toast("Deleted " + o.name, "Undo", function () { st.opps.splice(idx, 0, o); save(); go("opp-" + o.id); });
         break;
       case "add-actual": var last = (o.owned.actuals || []).map(function (x) { return x.month; }).sort().pop(); var p = ownedPerf(o); o.owned.actuals.push({ id: uid(), month: last ? addMonths(last, 1) : NOW, revenue: Math.round(p.planRev), expenses: Math.round(p.planExp), note: "" }); save(); render(); break;
       case "del-actual": o.owned.actuals = o.owned.actuals.filter(function (x) { return x.id !== b.dataset.id; }); save(); render(); break;
       case "copy-report":
-        var txt = reportPlain(st.opps.filter(function (x) { return x.id === b.dataset.id; })[0]);
-        try { navigator.clipboard.writeText(txt).then(function () { toast("Summary copied"); }, function () { fallbackCopy(txt); }); } catch (err) { fallbackCopy(txt); }
+        copyText(reportPlain(st.opps.filter(function (x) { return x.id === b.dataset.id; })[0]), "Summary copied");
         break;
       case "cmp": var id = b.dataset.id, i = ui.compare.indexOf(id); if (i >= 0) ui.compare.splice(i, 1); else { if (ui.compare.length >= 3) ui.compare.shift(); ui.compare.push(id); } render(); break;
       case "add-line": st.budget[b.dataset.k].push(b.dataset.k === "income" ? { id: uid(), name: "New income", amount: 0 } : { id: uid(), name: "New expense", amount: 0, kind: "Variable" }); save(); render(); break;
@@ -641,14 +739,14 @@
       case "snapshot": var v = Math.round(netWorthOf(st).total), hh = st.history.filter(function (x) { return x.month === NOW; })[0]; if (hh) hh.value = v; else st.history.push({ month: NOW, value: v }); save(); toast("Recorded " + M(v) + " for " + ymLabel(NOW)); render(); break;
       case "ask": ask(b.dataset.q); break;
       case "lesson": ui.lesson = b.dataset.id || null; render(); break;
-      case "lesson-done": st.lessonsDone = (st.lessonsDone || []).concat([b.dataset.id]); save(); toast("Lesson complete"); render(); break;
+      case "lesson-done": onb("lesson"); st.lessonsDone = (st.lessonsDone || []).concat([b.dataset.id]); save(); toast("Lesson complete"); render(); break;
       case "ask-reset":
         var kind = b.dataset.v; $("#confirmSlot").innerHTML = '<div class="banner" style="margin:0"><span>' + (kind === "sample" ? "Replace everything with the sample portfolio?" : "Clear every opportunity, account, and goal?") + ' This cannot be undone.</span><span class="confirm"><button class="btn sm ghost" data-act="cancel-reset">Cancel</button><button class="btn sm danger" data-act="do-reset" data-v="' + kind + '">Yes, continue</button></span></div>'; break;
       case "cancel-reset": $("#confirmSlot").innerHTML = ""; break;
       case "do-reset": var nm = st.settings.name; st = b.dataset.v === "sample" ? seed(nm) : emptyWs(nm); if (b.dataset.v === "sample") st.welcomed = true; ui.compare = []; ui.chat = []; ui.chatOpp = null; store(KEY, st); toast(b.dataset.v === "sample" ? "Sample portfolio loaded" : "Workspace cleared"); go("dashboard"); break;
     }
   });
-  function fallbackCopy(t) { var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast("Summary copied"); } catch (e) { toast("Select the summary text to copy it"); } ta.remove(); }
+  function fallbackCopy(t, ok) { var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast(ok || "Copied"); } catch (e) { toast("Copy is blocked here. Select the text and copy it yourself."); } ta.remove(); }
   window.addEventListener("hashchange", function () { if (location.hash !== "#learn") ui.lesson = null; render(); });
 
   render();

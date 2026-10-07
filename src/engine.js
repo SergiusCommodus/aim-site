@@ -134,8 +134,8 @@ var AIM = (function () {
     var beOcc = Fin.minWhere(function (o) { return core(o, i.adr).noi - ds >= 0; }, 0, 100);
     var beAdr = Fin.minWhere(function (a) { return core(i.occupancy, a).noi - ds >= 0; }, 0, 5000);
 
-    var prof = SEASONS[i.season] || SEASONS.flat, mean = prof.reduce(function (a, b) { return a + b; }, 0) / 12;
-    var dim = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    var prof = SEASONS[i.season] || SEASONS.flat, dim = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    var mean = prof.reduce(function (a, m, k) { return a + m * dim[k]; }, 0) / 365; /* day weighted so months add up to the annual figure */
     var monthly = prof.map(function (m, idx) {
       var occ = clamp(i.occupancy * m / mean, 0, 100), n = dim[idx] * occ / 100, st = i.avgStay > 0 ? n / i.avgStay : 0;
       return { month: idx, occ: occ, revenue: i.adr * n + i.cleanFee * st };
@@ -193,6 +193,37 @@ var AIM = (function () {
       ]
     };
   }
+
+
+  /* ---------- Loan schedule and financing options ---------- */
+  function amortization(loan, ratePct, years) {
+    var rows = [], r = ratePct / 1200, p = Fin.pmt(loan, ratePct, years), b = loan, n = Math.round(years * 12);
+    for (var y = 1; y <= Math.ceil(n / 12) && b > 0.005; y++) {
+      var int = 0, prin = 0;
+      for (var m = 0; m < 12 && (y - 1) * 12 + m < n; m++) { var it = b * r, pr = Math.min(b, p - it); int += it; prin += pr; b -= pr; }
+      rows.push({ year: y, payment: int + prin, interest: int, principal: prin, balance: Math.max(0, b) });
+    }
+    return rows;
+  }
+  function financing(type, inputs, settings) {
+    var base = run(type, inputs).inputs, downs = type === "business" ? [10, 15, 20, 25, 30] : [15, 20, 25, 30, 40];
+    if (downs.indexOf(Math.round(base.down)) < 0) downs = downs.concat([base.down]).sort(function (a, b) { return a - b; });
+    return downs.map(function (d) {
+      var r = run(type, Object.assign({}, base, { down: d }));
+      return { down: d, current: Math.abs(d - base.down) < 1e-9, cash: r.cash, pmt: r.pmt, cfYear: r.cfYear, coc: r.coc, dscr: r.dscr, meets: r.dscr >= settings.minDscr && r.coc >= settings.minCoc / 100 };
+    });
+  }
+
+  /* ---------- Due diligence checklists ---------- */
+  var CHECKLISTS = {
+    rental: ["Verify rent with signed leases or market comparables", "Get a property tax estimate at your purchase price, not the seller's", "Get an insurance quote, including flood and wind if needed",
+      "Order a home inspection", "Get roof, HVAC, and water heater ages", "Review the title report and survey", "Confirm zoning and rental permits", "Lock financing terms with a lender", "Estimate repairs with a contractor walkthrough", "Walk the neighborhood at night and on a weekend"],
+    str: ["Confirm short term rentals are legal here, including HOA rules", "Pull 12 months of comparable listing data for occupancy and nightly rate", "Get a short term rental insurance quote",
+      "Price furnishing and setup", "Line up a cleaner and a backup cleaner", "Check local lodging tax registration", "Order a home inspection", "Lock financing terms with a lender", "Run the long term rental fallback case"],
+    business: ["Get three years of tax returns and match them to the profit and loss", "Get 12 months of bank statements and match deposits to revenue", "Verify each add back with documents",
+      "Review customer concentration and any contracts", "Review the lease and confirm it can be assigned or renewed", "Get an equipment list with ages and condition", "Interview key employees, with the seller's permission",
+      "Confirm licenses and permits transfer", "Agree on a training and transition period", "Have an attorney and a CPA review the deal", "Get SBA or bank loan prequalification"]
+  };
 
   var MODELS = { rental: rental, str: str, business: business };
   var DEFAULTS = { rental: RENTAL_DEFAULTS, str: STR_DEFAULTS, business: BIZ_DEFAULTS };
@@ -345,7 +376,7 @@ var AIM = (function () {
   function pct(v, d) { if (v == null || !isFinite(v)) return "n/a"; return (v < 0 ? "−" : "") + Math.abs(v * 100).toFixed(d == null ? 1 : d) + "%"; }
   function ratio(v) { if (v == null) return "n/a"; if (!isFinite(v)) return "No debt"; return v.toFixed(2); }
 
-  return { Fin: Fin, run: run, DEFAULTS: DEFAULTS, SEASONS: SEASONS, scenarios: scenarios, sensitivity: sensitivity, targetPrice: targetPrice,
+  return { Fin: Fin, run: run, amortization: amortization, financing: financing, CHECKLISTS: CHECKLISTS, DEFAULTS: DEFAULTS, SEASONS: SEASONS, scenarios: scenarios, sensitivity: sensitivity, targetPrice: targetPrice,
     flags: flags, score: score, recommendation: recommendation, budget: budget, money: money, pct: pct, ratio: ratio, clamp: clamp, num: num };
 })();
 if (typeof module !== "undefined") module.exports = AIM;

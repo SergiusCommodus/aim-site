@@ -192,7 +192,14 @@ blockquote span{color:var(--accent)}
 .flinks{display:flex;flex-wrap:wrap;gap:16px;justify-content:flex-end;margin-bottom:6px}
 .flinks a{color:var(--muted)}
 .nav nav a.signin{color:var(--on-navy)}
-@media (max-width:480px){.mark small{display:none}.nav nav{gap:14px}}
+@media (max-width:480px){.mark small{display:none}.nav nav{gap:14px}.nav nav a.signin{display:none}}
+.menu-btn{display:none;background:none;border:1px solid rgba(255,255,255,.3);border-radius:6px;width:38px;height:36px;cursor:pointer;flex-direction:column;justify-content:center;align-items:center;gap:5px}
+.menu-btn span{display:block;width:16px;height:1.5px;background:#fff}
+.mnav{display:flex;flex-direction:column;background:var(--navy);border-top:1px solid rgba(255,255,255,.12);padding:8px 20px 16px}
+.mnav[hidden]{display:none}
+.mnav a{color:#fff;text-decoration:none;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:16px}
+@media (max-width:760px){.menu-btn{display:flex}}
+@media (min-width:761px){.mnav{display:none!important}}
 footer{border-top:1px solid var(--line);margin-top:72px;padding-block:32px 40px;font-size:13.5px;color:var(--muted)}
 footer .f{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px}
 footer p+p{margin-top:6px}
@@ -267,8 +274,10 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
       <a class="link" href="#faq">FAQ</a>
       <a class="link signin" href="app.html">Sign in</a>
       <a class="btn" href="demo.html">Request a demo</a>
+      <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Menu"><span></span><span></span></button>
     </nav>
   </div>
+  <nav class="mnav" id="mnav" hidden aria-label="Mobile"><a href="#platform">Platform</a><a href="#modules">Modules</a><a href="#pricing">Pricing</a><a href="#roadmap">Roadmap</a><a href="#faq">FAQ</a></nav>
 </header>
 
 <main id="top">
@@ -527,7 +536,7 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
     </div>
     <div style="text-align:right">
       <p class="flinks"><a href="demo.html">Request a demo</a><a href="app.html">Sign in</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></p>
-      <p>&copy; 2026 Carlisle Capital LLC</p>
+      <p>&copy; 2026 Carlisle Capital LLC · AIM Beta 0.9</p>
     </div>
   </div>
 </footer>
@@ -580,5 +589,7 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
   ["price","rent","down","rate"].forEach(function(id){$(id).addEventListener("input",render)});
   render();
 
+  var mb=document.getElementById("menuBtn"),mn=document.getElementById("mnav");
+  if(mb){mb.addEventListener("click",function(){var open=mn.hidden;mn.hidden=!open;mb.setAttribute("aria-expanded",String(open));});mn.addEventListener("click",function(e){if(e.target.tagName==="A"){mn.hidden=true;mb.setAttribute("aria-expanded","false");}});}
 })();
 </script>
