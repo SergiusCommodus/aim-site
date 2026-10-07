@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AIM Workspace</title>
+{{HEAD}}
+<style>
+{{CSS:shared}}
+{{CSS:app}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="bar" style="padding-inline:20px">
+  <a class="brand" href="index.html" aria-label="AIM home"><img src="{{LOGO}}" alt="AIM" width="74" height="24"><small>Artemis Investment<br>Metrics</small></a>
+  <div class="ws" id="wsSlot"></div>
+</div></header>
+<div id="app"><div class="empty" style="padding:60px">Loading your workspace…</div></div>
+<noscript><p style="padding:24px">AIM needs JavaScript turned on.</p></noscript>
+<script>
+{{JS:engine}}
+{{JS:learn}}
+{{JS:app}}
+</script>
+</body>
+</html>

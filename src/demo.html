@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Request a Demo | AIM</title>
+{{HEAD}}
+<style>
+{{CSS:shared}}
+/* Layout: navy top bar; white page split into the promise on the left and the request form on the right */
+.demo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,480px);gap:56px;padding-block:56px 72px;align-items:start}
+.demo h1{font-size:clamp(34px,4.6vw,52px);margin-top:16px}
+.demo .lede{font-size:18px;color:var(--muted);margin-top:18px;max-width:50ch}
+.gets{list-style:none;padding:0;margin:30px 0 0;display:flex;flex-direction:column;gap:16px}
+.gets li{display:grid;grid-template-columns:28px 1fr;gap:12px}
+.gets svg{width:22px;height:22px;color:var(--navy);margin-top:2px}
+.gets b{display:block;font-weight:600}
+.gets span{color:var(--muted);font-size:15px}
+.formcard{border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:12px;padding:28px;background:var(--panel);box-shadow:var(--shadow)}
+.formcard h2{font-size:24px}
+.formcard .sub{color:var(--muted);font-size:14.5px;margin-top:6px}
+form .fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld label{font-size:13.5px;color:var(--ink);font-weight:500}
+.fld label em{font-style:normal;color:var(--faint);font-weight:400}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opts label{display:flex;gap:8px;align-items:center;border:1px solid var(--line-2);border-radius:6px;padding:9px 10px;font-size:14px;color:var(--ink);cursor:pointer;font-weight:400}
+.opts label:has(input:checked){border-color:var(--navy);background:var(--tint)}
+.err{color:var(--bad);font-size:13px;min-height:0}
+input[aria-invalid="true"]{border-color:var(--bad)}
+.submit{margin-top:20px;width:100%;padding:15px}
+.fine{font-size:12.5px;color:var(--faint);margin-top:12px;text-align:center}
+.done{text-align:center;padding:12px 4px}
+.done .check{width:56px;height:56px;border-radius:50%;background:var(--tint);color:var(--navy);display:grid;place-items:center;margin:0 auto 16px}
+.done h2{font-size:26px}
+.done p{color:var(--muted);margin-top:10px}
+.done .btn{margin-top:22px;width:100%;padding:15px}
+@media (max-width:900px){.demo{grid-template-columns:1fr;gap:36px;padding-block:36px 56px}}
+@media (max-width:480px){form .fields,.opts{grid-template-columns:1fr}.formcard{padding:22px 18px}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap bar">
+  <a class="brand" href="index.html" aria-label="AIM home"><img src="{{LOGO}}" alt="AIM" width="74" height="24"><small>Artemis Investment<br>Metrics</small></a>
+  <nav class="topnav" aria-label="Primary"><a class="hide-sm" href="index.html#modules">Modules</a><a class="hide-sm" href="index.html#pricing">Pricing</a><a href="app.html">Sign in</a></nav>
+</div></header>
+
+<main class="wrap demo">
+  <div>
+    <p class="eyebrow">Private beta</p>
+    <h1>See your next deal through AIM.</h1>
+    <p class="lede">Request a demo and your workspace opens right away. No sales call, no credit card. Explore a full sample portfolio, then run a deal you are actually considering.</p>
+    <ul class="gets">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>Every module unlocked</b><span>Rentals, short term rentals, business acquisitions, budget, net worth, AIMBot, and AIM Learning.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>A sample portfolio to explore</b><span>A duplex, a beach condo, a laundromat, and a rental already owned, each fully modeled.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>Your numbers stay with you</b><span>During the beta your workspace is saved in your browser, not on our servers.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>Early pricing</b><span>Beta members lock in a lower rate when AIM Core launches.</span></div></li>
+    </ul>
+  </div>
+
+  <div class="formcard" id="card">
+    <form id="demoForm" novalidate>
+      <h2>Request a demo</h2>
+      <p class="sub">Takes under a minute.</p>
+      <div class="fields">
+        <div class="fld"><label for="fname">First name</label><input id="fname" name="first_name" autocomplete="given-name" required><span class="err" id="fname-err"></span></div>
+        <div class="fld"><label for="lname">Last name</label><input id="lname" name="last_name" autocomplete="family-name" required><span class="err" id="lname-err"></span></div>
+        <div class="fld full"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com"><span class="err" id="email-err"></span></div>
+        <div class="fld full"><label for="role">Which best describes you?</label>
+          <select id="role" name="role" required>
+            <option value="">Choose one</option>
+            <option>Preparing to buy my first asset</option>
+            <option>Landlord or short term host</option>
+            <option>Buying a small business</option>
+            <option>Business owner or operator</option>
+            <option>Advisor, agent, or lender</option>
+          </select><span class="err" id="role-err"></span></div>
+        <div class="fld full"><span id="int-l" style="font-size:13.5px;font-weight:500">What do you want to analyze? <em style="color:var(--faint);font-weight:400">Optional</em></span>
+          <div class="opts" role="group" aria-labelledby="int-l">
+            <label><input type="checkbox" name="interest" value="Long term rentals"> Long term rentals</label>
+            <label><input type="checkbox" name="interest" value="Short term rentals"> Short term rentals</label>
+            <label><input type="checkbox" name="interest" value="Business acquisitions"> Business acquisitions</label>
+            <label><input type="checkbox" name="interest" value="Budget and net worth"> Budget and net worth</label>
+          </div></div>
+        <div class="fld full"><label for="size">Assets you own today <em>Optional</em></label>
+          <select id="size" name="portfolio"><option value="">Prefer not to say</option><option>None yet</option><option>1 to 2</option><option>3 to 10</option><option>More than 10</option></select></div>
+      </div>
+      <button class="btn submit" type="submit" id="go">Request demo and open AIM</button>
+      <p class="fine">By requesting a demo you agree to our <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>
+    </form>
+  </div>
+</main>
+
+<footer class="footer"><div class="wrap f"><span>&copy; 2026 Carlisle Capital LLC. AIM provides analysis and education, not investment, tax, or legal advice.</span><nav><a href="index.html">Home</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav></div></footer>
+
+<script>
+(function () {
+  "use strict";
+  /* To receive demo requests by email, create a form at formspree.io and paste its endpoint here, for example "https://formspree.io/f/abcdwxyz". */
+  var FORM_ENDPOINT = "{{FORM_ENDPOINT}}";
+  var form = document.getElementById("demoForm");
+  function fieldErr(id, msg) { var el = document.getElementById(id), e = document.getElementById(id + "-err"); el.setAttribute("aria-invalid", msg ? "true" : "false"); e.textContent = msg || ""; return !msg; }
+  var RULES = {
+    fname: function (v) { return v.trim() ? "" : "Enter your first name."; },
+    lname: function (v) { return v.trim() ? "" : "Enter your last name."; },
+    email: function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? "" : "Enter a valid email, like name@example.com."; },
+    role: function (v) { return v ? "" : "Choose the option closest to you."; }
+  };
+  function check(id) { return fieldErr(id, RULES[id](document.getElementById(id).value)); }
+  function validate() { var ok = true; Object.keys(RULES).forEach(function (id) { ok = check(id) && ok; }); return ok; }
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!validate()) { var bad = form.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); return; }
+    var lead = {
+      first_name: form.first_name.value.trim(), last_name: form.last_name.value.trim(), email: form.email.value.trim(), role: form.role.value,
+      interests: Array.prototype.map.call(form.querySelectorAll("input[name=interest]:checked"), function (x) { return x.value; }), portfolio: form.portfolio.value,
+      requested_at: new Date().toISOString(), source: "aim demo page"
+    };
+    lead.name = lead.first_name + " " + lead.last_name;
+    try { localStorage.setItem("aim.lead.v1", JSON.stringify(lead)); } catch (err) { }
+    var btn = document.getElementById("go"); btn.disabled = true; btn.textContent = "Setting up your workspace…";
+    var send = FORM_ENDPOINT && FORM_ENDPOINT.indexOf("{{") !== 0
+      ? fetch(FORM_ENDPOINT, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" }, body: JSON.stringify(lead) }).catch(function () { return null; })
+      : Promise.resolve(null);
+    send.then(function () {
+      var card = document.getElementById("card");
+      card.innerHTML = '<div class="done" role="status"><div class="check"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></div><h2>Your workspace is ready, ' + lead.first_name.replace(/[<>&"]/g, "") + '.</h2><p>We loaded a sample portfolio so you can see every feature. Edit anything, or start fresh in Settings.</p><a class="btn" href="app.html#welcome" id="open">Open AIM</a></div>';
+      document.getElementById("open").focus();
+    });
+  });
+  Object.keys(RULES).forEach(function (id) { var el = document.getElementById(id); el.addEventListener(el.tagName === "SELECT" ? "change" : "input", function () { if (el.getAttribute("aria-invalid") === "true") check(id); }); });
+})();
+</script>
+</body>
+</html>
