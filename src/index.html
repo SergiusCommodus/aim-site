@@ -178,6 +178,19 @@ blockquote span{color:var(--accent)}
 .beta input{flex:1 1 220px;min-width:0;font:400 16px var(--body);padding:13px 14px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
 .beta #formMsg{font-size:14px;color:var(--navy);font-weight:500;min-height:1.4em}
 @media (max-width:760px){.beta{grid-template-columns:1fr;padding:30px 22px}}
+.beta.two{grid-template-columns:1fr 1.25fr}
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.way{display:flex;flex-direction:column;gap:8px;padding:22px;border-radius:12px;background:var(--paper);border:1px solid var(--line);text-decoration:none;color:var(--ink);transition:transform .15s ease,border-color .15s ease}
+.way:hover{transform:translateY(-2px);border-color:var(--navy)}
+.way .wk{font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.way b{font:italic 800 20px/1.15 var(--display);font-stretch:112%}
+.way>span:not(.wk):not(.wgo){font-size:14px;color:var(--muted)}
+.way .wgo{margin-top:auto;font-weight:600;color:var(--navy);font-size:14.5px;padding-top:4px}
+.way.solid{background:var(--navy);border-color:var(--navy);color:#fff}
+.way.solid .wk{color:var(--sky)}.way.solid>span:not(.wk):not(.wgo){color:var(--on-navy-muted)}.way.solid .wgo{color:#fff}
+@media (max-width:960px){.beta.two{grid-template-columns:1fr}}
+@media (max-width:560px){.ways{grid-template-columns:1fr}}
+
 
 .steps{grid-template-columns:repeat(3,1fr)}
 @media (max-width:860px){.steps{grid-template-columns:1fr}}
@@ -273,11 +286,12 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
       <a class="link" href="#pricing">Pricing</a>
       <a class="link" href="#faq">FAQ</a>
       <a class="link signin" href="app.html">Sign in</a>
-      <a class="btn" href="demo.html">Request a demo</a>
+      <a class="link signin" href="app.html#demo">Live demo</a>
+      <a class="btn" href="demo.html">Get started</a>
       <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Menu"><span></span><span></span></button>
     </nav>
   </div>
-  <nav class="mnav" id="mnav" hidden aria-label="Mobile"><a href="#platform">Platform</a><a href="#modules">Modules</a><a href="#pricing">Pricing</a><a href="#roadmap">Roadmap</a><a href="#faq">FAQ</a></nav>
+  <nav class="mnav" id="mnav" hidden aria-label="Mobile"><a href="#platform">Platform</a><a href="#modules">Modules</a><a href="#pricing">Pricing</a><a href="#roadmap">Roadmap</a><a href="#faq">FAQ</a><a href="app.html#demo">Live demo</a><a href="app.html">Sign in</a></nav>
 </header>
 
 <main id="top">
@@ -288,8 +302,8 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
       <h1>Know if the deal works <em>before</em> you sign.</h1>
       <p class="lede">AIM brings rental analysis, small business acquisitions, budgeting, and net worth into one account. It runs the numbers, explains what they mean, and keeps tracking the asset after you own it.</p>
       <div class="cta">
-        <a class="btn" href="demo.html">Request a demo</a>
-        <a class="btn ghost" href="#modules">See what AIM analyzes</a>
+        <a class="btn" href="demo.html">Get started free</a>
+        <a class="btn ghost" href="app.html#demo">Try the live demo</a>
       </div>
       <div class="verbs" aria-label="The AIM loop"><span>Analyze</span><span>Decide</span><span>Own</span><span>Improve</span><span>Learn</span></div>
     </div>
@@ -388,7 +402,7 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
         <article class="mod"><span class="k">Real estate</span><h3>Rental property</h3><p>Acquisition, financing, operating costs, and scenario tests for vacancy, repairs, rent, and rate changes.</p><div class="metrics"><span>Cap rate</span><span>Cash on cash</span><span>DSCR</span><span>Break even occupancy</span></div></article>
         <article class="mod"><span class="k">Real estate</span><h3>Short term rental</h3><p>Nightly rate, occupancy, seasonality, and platform fees, with a side by side check against a long term lease for the same property.</p><div class="metrics"><span>ADR</span><span>Occupancy</span><span>Break even ADR</span></div></article>
         <article class="mod"><span class="k">Small business</span><h3>Boring business</h3><p>Turn a broker listing into a buyer model. Normalize earnings, value the business, size the debt, and review concentration and owner risk.</p><div class="metrics"><span>SDE</span><span>EBITDA</span><span>Multiple</span><span>Post debt cash</span></div></article>
-        <article class="mod"><span class="k">Personal finance</span><h3>Budget and savings</h3><p>Income, expenses, debt, and goals connected to the asset you want to buy, so you know whether you are ready to buy it.</p><div class="metrics"><span>Savings rate</span><span>Cash runway</span><span>Readiness</span></div></article>
+        <article class="mod"><span class="k">Personal finance</span><h3>Budget and planning</h3><p>Income, spending, and goals connected to the asset you want to buy, plus a debt payoff planner and a financial independence projection.</p><div class="metrics"><span>Savings rate</span><span>Debt free date</span><span>Independence number</span></div></article>
         <article class="mod"><span class="k">Net worth</span><h3>Wealth picture</h3><p>Cash, brokerage accounts, real estate equity, and business value in one view, with allocation and trend over time.</p><div class="metrics"><span>Net worth</span><span>Allocation</span><span>Liquidity</span></div></article>
         <article class="mod"><span class="k">Intelligence</span><h3>AIM Score and AIMBot</h3><p>A normalized score, risk flags, and a conversational assistant that explains your model and tells you which three inputs matter most.</p><div class="metrics"><span>Risk flags</span><span>Recommendations</span><span>Comparisons</span></div></article>
       </div>
@@ -400,12 +414,12 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
       <div>
         <p class="eyebrow">Design rule</p>
         <blockquote style="margin-top:16px">AI should never invent the economics of a deal. <span>The model calculates. AI explains.</span></blockquote>
-        <p class="note">Every important number in AIM shows where it came from. You always know whether a value is your assumption, an actual you entered, or data from a connected account.</p>
+        <p class="note">AIM keeps your assumptions and your actual results separate, so you always know which numbers are estimates and which ones happened. Bank and listing connections are on the roadmap.</p>
       </div>
       <div class="prov" aria-label="Example of data sources">
         <div><span>Monthly rent</span><span class="num">$2,450</span><span class="src a">Assumption</span></div>
         <div><span>Property taxes</span><span class="num">$4,104</span><span class="src m">Actual</span></div>
-        <div><span>Checking balance</span><span class="num">$38,210</span><span class="src i">Imported</span></div>
+        <div><span>March net cash flow</span><span class="num">$1,438</span><span class="src m">Actual</span></div>
         <div><span>Vacancy</span><span class="num">6.0%</span><span class="src a">Assumption</span></div>
         <div><span>Insurance premium</span><span class="num">$1,026</span><span class="src m">Actual</span></div>
       </div>
@@ -445,18 +459,18 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
           <h3>Free</h3>
           <p class="price">$0</p>
           <ul><li>Rental and business calculators</li><li>AIM Learning basics</li><li>Limited saved analyses</li></ul>
-          <a class="btn ghost" href="demo.html">Request a demo</a>
+          <a class="btn ghost" href="app.html#demo">Try the live demo</a>
         </div>
         <div class="plan core">
           <h3>AIM Core</h3>
           <p class="price">$15<small> / month</small></p>
-          <ul><li>Full personal dashboard</li><li>Unlimited saved analyses</li><li>Short term rental and business tools</li><li>AIM Score, risk flags, and AIMBot</li><li>Alerts and investment readiness</li></ul>
-          <a class="btn" href="demo.html">Request a demo</a>
+          <ul><li>Full personal dashboard</li><li>Unlimited saved analyses</li><li>Short term rental and business tools</li><li>AIM Score, risk flags, and AIMBot</li><li>Debt payoff and independence planner</li><li>Alerts and investment readiness</li></ul>
+          <a class="btn" href="demo.html">Get started free in beta</a>
         </div>
         <div class="plan">
           <h3>Pro and Teams</h3>
           <p class="price" style="font-size:28px">Later</p>
-          <ul><li>Exports and advanced reports</li><li>Ownership and inventory tools</li><li>Shared workspaces and permissions</li></ul>
+          <ul><li>Advanced reports and data exports</li><li>Ownership and inventory tools</li><li>Shared workspaces and permissions</li></ul>
           <p class="soon">After launch</p>
         </div>
       </div>
@@ -487,14 +501,14 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
       <div class="sec-head">
         <p class="eyebrow">Getting started</p>
         <div>
-          <h2>From request to your first analysis in minutes.</h2>
-          <p>There is no sales call standing between you and the product. Request a demo and your workspace opens right away.</p>
+          <h2>From sign up to your first analysis in minutes.</h2>
+          <p>There is no sales call standing between you and the product. Explore the live demo, or set up your own workspace right away.</p>
         </div>
       </div>
       <ol class="loop steps">
-        <li><h3>Request a demo</h3><p>Tell us your name and what you invest in. It takes under a minute.</p></li>
-        <li><h3>Explore a live workspace</h3><p>AIM opens with a sample portfolio: a duplex, a beach condo, a laundromat, and a rental you already own.</p></li>
-        <li><h3>Run your own deal</h3><p>Swap in a listing you are considering and get a score, a target price, and the risks in plain language.</p></li>
+        <li><h3>Get started</h3><p>Tell us your name and what you invest in. It takes under a minute, or skip straight to the live demo.</p></li>
+        <li><h3>Set up your workspace</h3><p>A guided setup captures your cash flow, balances, debts, and targets, so every score is measured against your situation.</p></li>
+        <li><h3>Run your own deal</h3><p>Add a listing you are considering and get a score, a target price, and the risks in plain language.</p></li>
       </ol>
     </div>
   </section>
@@ -509,7 +523,8 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
         <details open><summary>Who is AIM for?</summary><p>People who want to own income producing assets without a finance team behind them: first time rental buyers, landlords and hosts, people buying a small business, and anyone building the savings to do one of those.</p></details>
         <details><summary>Does AIM tell me what to buy?</summary><p>No. AIM shows you whether a deal meets the targets you set, what could go wrong, and what price would make it work. The decision stays yours. AIM provides analysis and education, not investment, tax, or legal advice.</p></details>
         <details><summary>Where do the numbers come from?</summary><p>From you, during the beta. Every figure is either an assumption you entered or an actual you logged, and AIM labels which is which. Bank and listing connections come later in the roadmap.</p></details>
-        <details><summary>Is my data private?</summary><p>During the beta your workspace is saved in your own browser and is not sent to AIM servers. Your demo request details are used only to contact you about AIM.</p></details>
+        <details><summary>What is the difference between the demo and my workspace?</summary><p>The live demo opens instantly with a fully modeled sample portfolio, so you can explore every feature without entering anything. Your workspace is yours: a five minute guided setup captures your real income, spending, accounts, debts, and targets. They are kept separate, and you can switch between them from the top bar at any time.</p></details>
+        <details><summary>Is my data private?</summary><p>During the beta your workspace is saved in your own browser and is not sent to AIM servers. You can download a backup at any time. The details you give when you sign up are used only to contact you about AIM.</p></details>
         <details><summary>What does it cost?</summary><p>The beta is free. AIM Core will be $15 a month at launch, and beta members get early pricing.</p></details>
         <details><summary>How is the AIM Score calculated?</summary><p>It weighs return against your target, debt coverage, how the deal holds up in a downside case, whether it fits your available cash, and the quality of the assumptions. The score is a summary. The numbers behind it are always one tap away.</p></details>
       </div>
@@ -517,13 +532,16 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
   </section>
 
   <section class="wrap" id="demo" style="padding-block:24px 0">
-    <div class="beta">
+    <div class="beta two">
       <div>
-        <p class="eyebrow">Private beta</p>
-        <h2 style="margin-top:12px">See your next deal through AIM.</h2>
-        <p>Request a demo and your workspace opens immediately, with every module unlocked.</p>
+        <p class="eyebrow">Two ways in</p>
+        <h2 style="margin-top:12px">Explore first, or start with your own numbers.</h2>
+        <p>Both open instantly in your browser, and you can switch between them any time.</p>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end"><a class="btn" href="demo.html">Request a demo</a><a class="btn ghost" href="app.html">Sign in</a></div>
+      <div class="ways">
+        <a class="way" href="app.html#demo"><span class="wk">Live demo</span><b>Explore a sample portfolio</b><span>A duplex, a beach condo, a laundromat, a rental already owned, a budget, debts, and goals. Nothing to enter.</span><span class="wgo">Open the demo &rarr;</span></a>
+        <a class="way solid" href="demo.html"><span class="wk">Ready to use</span><b>Set up your workspace</b><span>A guided five minute setup for your real cash flow, balances, debts, and targets. Then analyze the deals you are considering.</span><span class="wgo">Get started &rarr;</span></a>
+      </div>
     </div>
   </section>
 </main>
@@ -535,8 +553,8 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
       <p>AIM provides analysis tools and education. It is not investment, tax, or legal advice.</p>
     </div>
     <div style="text-align:right">
-      <p class="flinks"><a href="demo.html">Request a demo</a><a href="app.html">Sign in</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></p>
-      <p>&copy; 2026 Carlisle Capital LLC · AIM Beta 0.9</p>
+      <p class="flinks"><a href="demo.html">Get started</a><a href="app.html#demo">Live demo</a><a href="app.html">Sign in</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></p>
+      <p>&copy; 2026 Carlisle Capital LLC · AIM Beta 1.0</p>
     </div>
   </div>
 </footer>

@@ -58,6 +58,37 @@ def biz(i):
     ds = pmt(bank, i["bankRate"], i["bankTerm"]) * 12 + pmt(sn, i["sellerRate"], i["sellerTerm"]) * 12
     avail = sde - i["buyerSalary"] - i["capexReserve"]
     return dict(sde=sde, ds=ds, dscr=avail / ds if ds else None, cf=avail - ds, cash=eq + i["closing"] + i["workingCapital"], multiple=i["price"] / sde if sde > 0 else None)
+def debts(lst, extra, method):
+    # month by month: accrue interest, pay each minimum, then send the leftover to the target debt
+    ds = [dict(name=d["name"], b=d["balance"], r=d["rate"], m=d["min"], off=None) for d in lst if d["balance"] > 0.005]
+    budget = sum(d["m"] for d in ds) + extra; paid_int = 0.0; month = 0
+    while month < 600 and any(d["b"] > 0.005 for d in ds):
+        month += 1; live = [d for d in ds if d["b"] > 0.005]
+        for d in live: i = d["b"] * d["r"] / 1200; d["b"] += i; paid_int += i
+        left = budget
+        for d in live: p = min(d["m"], d["b"], left); d["b"] -= p; left -= p
+        key = (lambda d: (d["b"], -d["r"])) if method == "snowball" else (lambda d: (-d["r"], d["b"]))
+        for d in sorted([d for d in live if d["b"] > 0.005], key=key):
+            if left <= 0: break
+            p = min(left, d["b"]); d["b"] -= p; left -= p
+        for d in ds:
+            if d["b"] <= 0.005 and d["off"] is None: d["b"] = 0; d["off"] = month
+    if any(d["off"] is None for d in ds): return dict(months=None, interest=None, order=None)
+    return dict(months=month, interest=paid_int, order=[d["name"] for d in sorted(ds, key=lambda d: d["off"])])
+def proj(i):
+    # closed form future value of a balance plus an ordinary annuity, and the month the target is first reached
+    r = i["ret"] / 1200; n = max(1, min(60, round(i["years"]))) * 12; s0 = i["start"]; m = i["monthly"]
+    g = (1 + r) ** n; end = s0 * g + (m * (g - 1) / r if r != 0 else m * n)
+    T = i["expenses"] * 12 / (i["swr"] / 100)
+    fv = lambda k: s0 * (1 + r) ** k + (m * ((1 + r) ** k - 1) / r if r != 0 else m * k)
+    fi = None
+    if s0 >= T: fi = 0
+    else:
+        k = 1
+        while k <= 1200:
+            if fv(k) >= T: fi = k; break
+            k += 1
+    return dict(end=end, target=T, fiMonth=fi)
 bad = 0; worst = {}
 def cmp(tag, k, a, b, tol=1e-6):
     global bad
@@ -74,6 +105,14 @@ for c in cases:
     for k, v in exp.items(): cmp("str", k, c["s"][k], v, 1e-6)
     exp = biz(c["biz"])
     for k, v in exp.items(): cmp("biz", k, c["b"][k], v)
+for c in cases:
+    e = debts(c["debts"], c["extra"], c["method"])
+    cmp("debt", "months", c["d"]["months"], e["months"], 0)
+    cmp("debt", "interest", c["d"]["interest"], e["interest"], 1e-7)
+    if e["order"] is not None and c["d"]["order"] != e["order"]: bad += 1; print("MISMATCH debt order", c["d"]["order"], e["order"])
+    e = proj(c["pin"])
+    for k in ("end", "target"): cmp("proj", k, c["p"][k], e[k], 1e-9)
+    cmp("proj", "fiMonth", c["p"]["fiMonth"], e["fiMonth"], 0)
 print("cases:", len(cases), "mismatches:", bad)
 print("worst relative error:", max(worst.values()))
 sys.exit(1 if bad else 0)

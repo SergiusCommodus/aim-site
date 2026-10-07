@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Request a Demo | AIM</title>
+<title>Get Started | AIM</title>
 {{HEAD}}
 <style>
 {{CSS:shared}}
@@ -35,7 +35,8 @@ input[aria-invalid="true"]{border-color:var(--bad)}
 .done .check{width:56px;height:56px;border-radius:50%;background:var(--tint);color:var(--navy);display:grid;place-items:center;margin:0 auto 16px}
 .done h2{font-size:26px}
 .done p{color:var(--muted);margin-top:10px}
-.done .btn{margin-top:22px;width:100%;padding:15px}
+.done-acts{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.done .btn{width:100%;padding:15px}
 @media (max-width:900px){.demo{grid-template-columns:1fr;gap:36px;padding-block:36px 56px}}
 @media (max-width:480px){form .fields,.opts{grid-template-columns:1fr}.formcard{padding:22px 18px}}
 </style>
@@ -43,17 +44,17 @@ input[aria-invalid="true"]{border-color:var(--bad)}
 <body>
 <header class="topbar"><div class="wrap bar">
   <a class="brand" href="index.html" aria-label="AIM home"><img src="{{LOGO}}" alt="AIM" width="74" height="24"><small>Artemis Investment<br>Metrics</small></a>
-  <nav class="topnav" aria-label="Primary"><a class="hide-sm" href="index.html#modules">Modules</a><a class="hide-sm" href="index.html#pricing">Pricing</a><a href="app.html">Sign in</a></nav>
+  <nav class="topnav" aria-label="Primary"><a class="hide-sm" href="index.html#modules">Modules</a><a class="hide-sm" href="index.html#pricing">Pricing</a><a href="app.html#demo">Live demo</a><a href="app.html">Sign in</a></nav>
 </div></header>
 
 <main class="wrap demo">
   <div>
-    <p class="eyebrow">Private beta</p>
+    <p class="eyebrow">Free during the beta</p>
     <h1>See your next deal through AIM.</h1>
-    <p class="lede">Request a demo and your workspace opens right away. No sales call, no credit card. Explore a full sample portfolio, then run a deal you are actually considering.</p>
+    <p class="lede">Your workspace opens right away. No sales call, no credit card. Set it up with your real numbers, or explore the full live demo first.</p>
     <ul class="gets">
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>Every module unlocked</b><span>Rentals, short term rentals, business acquisitions, budget, net worth, AIMBot, and AIM Learning.</span></div></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>A sample portfolio to explore</b><span>A duplex, a beach condo, a laundromat, and a rental already owned, each fully modeled.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>Every module unlocked</b><span>Rentals, short term rentals, business acquisitions, budget, net worth, the debt and independence planner, AIMBot, and AIM Learning.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>A demo and your own workspace</b><span>Explore a fully modeled sample portfolio, then set up a separate workspace for your real income, accounts, debts, and deals.</span></div></li>
       <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>Your numbers stay with you</b><span>During the beta your workspace is saved in your browser, not on our servers.</span></div></li>
       <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><b>Early pricing</b><span>Beta members lock in a lower rate when AIM Core launches.</span></div></li>
     </ul>
@@ -61,8 +62,8 @@ input[aria-invalid="true"]{border-color:var(--bad)}
 
   <div class="formcard" id="card">
     <form id="demoForm" novalidate>
-      <h2>Request a demo</h2>
-      <p class="sub">Takes under a minute.</p>
+      <h2>Create your workspace</h2>
+      <p class="sub">Takes under a minute. <a href="app.html#demo">Or try the live demo first.</a></p>
       <div class="fields">
         <div class="fld"><label for="fname">First name</label><input id="fname" name="first_name" autocomplete="given-name" required><span class="err" id="fname-err"></span></div>
         <div class="fld"><label for="lname">Last name</label><input id="lname" name="last_name" autocomplete="family-name" required><span class="err" id="lname-err"></span></div>
@@ -86,8 +87,8 @@ input[aria-invalid="true"]{border-color:var(--bad)}
         <div class="fld full"><label for="size">Assets you own today <em>Optional</em></label>
           <select id="size" name="portfolio"><option value="">Prefer not to say</option><option>None yet</option><option>1 to 2</option><option>3 to 10</option><option>More than 10</option></select></div>
       </div>
-      <button class="btn submit" type="submit" id="go">Request demo and open AIM</button>
-      <p class="fine">By requesting a demo you agree to our <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>
+      <button class="btn submit" type="submit" id="go">Continue to setup</button>
+      <p class="fine">By continuing you agree to our <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>
     </form>
   </div>
 </main>
@@ -115,17 +116,17 @@ input[aria-invalid="true"]{border-color:var(--bad)}
     var lead = {
       first_name: form.first_name.value.trim(), last_name: form.last_name.value.trim(), email: form.email.value.trim(), role: form.role.value,
       interests: Array.prototype.map.call(form.querySelectorAll("input[name=interest]:checked"), function (x) { return x.value; }), portfolio: form.portfolio.value,
-      requested_at: new Date().toISOString(), source: "aim demo page"
+      requested_at: new Date().toISOString(), source: "aim get started page"
     };
     lead.name = lead.first_name + " " + lead.last_name;
     try { localStorage.setItem("aim.lead.v1", JSON.stringify(lead)); } catch (err) { }
-    var btn = document.getElementById("go"); btn.disabled = true; btn.textContent = "Setting up your workspace…";
+    var btn = document.getElementById("go"); btn.disabled = true; btn.textContent = "Opening AIM…";
     var send = FORM_ENDPOINT && FORM_ENDPOINT.indexOf("{{") !== 0
       ? fetch(FORM_ENDPOINT, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" }, body: JSON.stringify(lead) }).catch(function () { return null; })
       : Promise.resolve(null);
     send.then(function () {
       var card = document.getElementById("card");
-      card.innerHTML = '<div class="done" role="status"><div class="check"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></div><h2>Your workspace is ready, ' + lead.first_name.replace(/[<>&"]/g, "") + '.</h2><p>We loaded a sample portfolio so you can see every feature. Edit anything, or start fresh in Settings.</p><a class="btn" href="app.html#welcome" id="open">Open AIM</a></div>';
+      card.innerHTML = '<div class="done" role="status"><div class="check"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></div><h2>You are in, ' + lead.first_name.replace(/[<>&"]/g, "") + '.</h2><p>Set up your workspace with your real numbers in about five minutes, or look around the live demo first. You can switch between them any time.</p><div class="done-acts"><a class="btn" href="app.html#setup" id="open">Set up my workspace</a><a class="btn ghost" href="app.html#demo">Explore the demo first</a></div></div>';
       document.getElementById("open").focus();
     });
   });

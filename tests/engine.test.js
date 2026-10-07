@@ -36,4 +36,19 @@ for (const t of ["rental", "str", "business"]) {
   assert.ok(at.dscr >= 1.25 && at.coc >= 0.08, t + " target meets criteria");
   assert.ok(above.dscr < 1.25 || above.coc < 0.08, t + " target is the maximum");
 }
+// Debt payoff: $10,000 at 12% with $500 a month takes 23 months (n = -ln(1 - rB/P) / ln(1 + r) = 22.4)
+const d1 = A.debtPlan([{ name: "Card", balance: 10000, rate: 12, min: 500 }], 0, "avalanche");
+assert.strictEqual(d1.months, 23, "single debt months");
+close(d1.totalInterest, 22 * 500 + (d1.series[22].balance * 1.01) - 10000, 1e-6, "single debt interest");
+// Avalanche never pays more interest than snowball, and payments that do not cover interest are flagged
+const mix = [{ name: "Card", balance: 4000, rate: 24.9, min: 120 }, { name: "Auto", balance: 12000, rate: 6.9, min: 380 }, { name: "Store card", balance: 900, rate: 18, min: 35 }];
+const av = A.debtPlan(mix, 300, "avalanche"), sb = A.debtPlan(mix, 300, "snowball");
+assert.ok(av.totalInterest <= sb.totalInterest + 1e-9, "avalanche interest is lowest");
+assert.strictEqual(sb.debts[0].name, "Store card", "snowball clears the smallest balance first");
+assert.strictEqual(av.debts[0].name, "Card", "avalanche clears the highest rate first");
+assert.strictEqual(A.debtPlan([{ balance: 10000, rate: 24, min: 150 }], 0).feasible, false, "payment below interest never pays off");
+// Projection: $500 a month at 6% for 30 years grows to $502,257.52 (future value of an ordinary annuity)
+const pj = A.projection({ start: 0, monthly: 500, ret: 6, years: 30, expenses: 4000, swr: 4 });
+close(pj.end, 502257.52, 0.01, "annuity future value");
+close(pj.target, 1200000, 1e-9, "independence target is 25 times yearly spending");
 console.log("All engine tests passed");

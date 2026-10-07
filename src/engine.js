@@ -365,6 +365,48 @@ var AIM = (function () {
     return { income: income, expenses: expenses, fixed: fixed, variable: expenses - fixed, fcf: fcf, savingsRate: income > 0 ? fcf / income : 0 };
   }
 
+  /* Debt payoff with rollover. The total monthly payment (all minimums plus extra) stays fixed, so each paid off
+     balance frees its minimum for the next target. Avalanche targets the highest rate, snowball the smallest balance. */
+  function debtPlan(list, extra, method) {
+    var ds = (list || []).map(function (d, i) { return { i: i, name: d.name || "Debt " + (i + 1), start: Math.max(0, num(d.balance)), bal: Math.max(0, num(d.balance)), rate: Math.max(0, num(d.rate)), min: Math.max(0, num(d.min)), interest: 0, paidOff: null }; })
+      .filter(function (d) { return d.bal > 0.005; });
+    extra = Math.max(0, num(extra));
+    var pay = ds.reduce(function (a, d) { return a + d.min; }, 0) + extra, total = 0, month = 0;
+    function owed() { return ds.reduce(function (a, d) { return a + d.bal; }, 0); }
+    var series = [{ month: 0, balance: owed() }];
+    while (month < 600 && ds.some(function (d) { return d.bal > 0.005; })) {
+      month++;
+      var active = ds.filter(function (d) { return d.bal > 0.005; }), pool = pay;
+      active.forEach(function (d) { var it = d.bal * d.rate / 1200; d.bal += it; d.interest += it; total += it; });
+      active.forEach(function (d) { var p = Math.min(d.min, d.bal, pool); d.bal -= p; pool -= p; });
+      active.filter(function (d) { return d.bal > 0.005; }).sort(method === "snowball"
+        ? function (a, b) { return a.bal - b.bal || b.rate - a.rate; }
+        : function (a, b) { return b.rate - a.rate || a.bal - b.bal; })
+        .forEach(function (d) { if (pool <= 0) return; var p = Math.min(pool, d.bal); d.bal -= p; pool -= p; });
+      ds.forEach(function (d) { if (d.bal <= 0.005 && d.paidOff == null) { d.bal = 0; d.paidOff = month; } });
+      series.push({ month: month, balance: owed() });
+    }
+    var done = ds.every(function (d) { return d.paidOff != null; });
+    return { method: method === "snowball" ? "snowball" : "avalanche", payment: pay, extra: extra, feasible: done, months: done ? month : null, totalInterest: done ? total : null,
+      debts: ds.slice().sort(function (a, b) { return (a.paidOff == null ? 1e9 : a.paidOff) - (b.paidOff == null ? 1e9 : b.paidOff); }), series: series };
+  }
+
+  /* Investment projection with end of month contributions. Returns are real (after inflation), so the
+     independence target is today's yearly spending divided by the safe withdrawal rate. */
+  function projection(o) {
+    var bal = Math.max(0, num(o.start)), m = Math.max(0, num(o.monthly)), r = num(o.ret, 0) / 1200, yrs = clamp(Math.round(num(o.years, 30)), 1, 60);
+    var swr = num(o.swr, 4), target = swr > 0 ? num(o.expenses) * 12 / (swr / 100) : 0, contrib = bal, fi = target > 0 && bal >= target ? 0 : null;
+    var pts = [{ year: 0, balance: bal, contributed: contrib, growth: 0 }];
+    for (var k = 1; k <= yrs * 12; k++) {
+      bal = bal * (1 + r) + m; contrib += m;
+      if (fi == null && target > 0 && bal >= target) fi = k;
+      if (k % 12 === 0) pts.push({ year: k / 12, balance: bal, contributed: contrib, growth: bal - contrib });
+    }
+    var b2 = bal, mm = yrs * 12;
+    while (fi == null && target > 0 && mm < 1200) { mm++; b2 = b2 * (1 + r) + m; if (b2 >= target) fi = mm; }
+    return { target: target, fiMonth: fi, fiYears: fi == null ? null : fi / 12, end: bal, contributed: contrib, points: pts, monthlyIncomeAtEnd: bal * swr / 100 / 12 };
+  }
+
   function money(v, opts) {
     if (v == null || !isFinite(v)) return "n/a";
     var neg = v < 0, a = Math.abs(v), s;
@@ -377,6 +419,6 @@ var AIM = (function () {
   function ratio(v) { if (v == null) return "n/a"; if (!isFinite(v)) return "No debt"; return v.toFixed(2); }
 
   return { Fin: Fin, run: run, amortization: amortization, financing: financing, CHECKLISTS: CHECKLISTS, DEFAULTS: DEFAULTS, SEASONS: SEASONS, scenarios: scenarios, sensitivity: sensitivity, targetPrice: targetPrice,
-    flags: flags, score: score, recommendation: recommendation, budget: budget, money: money, pct: pct, ratio: ratio, clamp: clamp, num: num };
+    flags: flags, score: score, recommendation: recommendation, budget: budget, debtPlan: debtPlan, projection: projection, money: money, pct: pct, ratio: ratio, clamp: clamp, num: num };
 })();
 if (typeof module !== "undefined") module.exports = AIM;

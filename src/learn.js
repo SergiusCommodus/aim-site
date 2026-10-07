@@ -4,6 +4,13 @@ var LEARN = (function () {
   var M = AIM.money, P = AIM.pct, R = AIM.ratio;
 
   function first(ctx, type) { return ctx.opps.filter(function (o) { return !type || o.type === type; })[0]; }
+  function debtList(ctx) { return (ctx.accounts || []).filter(function (a) { return a.type === "Liability" && +a.value > 0; }).map(function (a) { return { name: a.name, balance: +a.value || 0, rate: +a.rate || 0, min: +a.min || 0 }; }); }
+  function projFor(ctx) {
+    var pl = ctx.plan || {}, b = AIM.budget(ctx.budget), inv = (ctx.accounts || []).filter(function (a) { return a.type === "Investments" || a.type === "Retirement"; }).reduce(function (s, a) { return s + (+a.value || 0); }, 0);
+    var start = pl.start == null ? inv : +pl.start, monthly = pl.monthly == null ? Math.max(0, Math.round(b.fcf)) : +pl.monthly, spend = pl.spend == null ? Math.round(b.expenses) : +pl.spend, ret = pl.ret == null ? 5 : +pl.ret;
+    var r = AIM.projection({ start: start, monthly: monthly, ret: ret, years: pl.years || 30, expenses: spend, swr: pl.swr || 4 });
+    r.start = start; r.monthly = monthly; r.spend = spend; r.ret = ret; return r;
+  }
 
   var LESSONS = [
     { id: "cap", track: "Real estate", title: "Cap rate", mins: 4,
@@ -78,6 +85,18 @@ var LEARN = (function () {
         "Investment readiness compares the cash a deal needs with the cash you have after your reserve. When there is a gap, your monthly free cash flow tells you how long it takes to close."],
       formula: "Months to ready = (Cash needed − Available cash) ÷ Monthly free cash flow",
       ex: function (ctx) { var b = AIM.budget(ctx.budget); return "You save " + P(b.savingsRate, 0) + " of income, or " + M(b.fcf) + " a month, with " + M(ctx.available) + " available after your reserve."; }, open: "budget" },
+    { id: "debt", track: "Planning", title: "Avalanche or snowball", mins: 4,
+      summary: "Two ways to pay off several debts, and what each one costs.",
+      body: ["Both methods pay every minimum, then send any extra money to one target debt. When that debt is gone, its payment rolls into the next one, so the total you pay each month never shrinks.",
+        "Avalanche targets the highest interest rate first, which always costs the least interest. Snowball targets the smallest balance first, which closes accounts sooner and can keep you motivated. The gap between them is often smaller than people expect, so pick the one you will stick with."],
+      formula: "Monthly interest = Balance × Annual rate ÷ 12",
+      ex: function (ctx) { var d = debtList(ctx); if (!d.length) return ""; var pl = ctx.plan || {}, av = AIM.debtPlan(d, pl.extra || 0, "avalanche"), sb = AIM.debtPlan(d, pl.extra || 0, "snowball"); if (!av.feasible) return "Your current payments do not cover the interest on every balance, so neither method finishes. Raise the payment in the planner."; return "With " + M(pl.extra || 0) + " extra a month, avalanche clears your debts in " + av.months + " months with " + M(av.totalInterest) + " of interest. Snowball takes " + sb.months + " months and " + M(sb.totalInterest) + "."; }, open: "planner" },
+    { id: "fi", track: "Planning", title: "Your independence number", mins: 5,
+      summary: "How much you need invested to live on the returns, and how long it takes.",
+      body: ["Financial independence means your investments can pay for your life. A common rule of thumb is the 4% withdrawal rate: a portfolio 25 times your yearly spending has historically lasted 30 years or more in most periods.",
+        "Two levers move the date more than anything else: how much you invest each month and how much you plan to spend. Return matters too, but you control it least. AIM uses returns after inflation so every figure is in today's dollars."],
+      formula: "Independence number = Yearly spending ÷ Withdrawal rate",
+      ex: function (ctx) { var p = projFor(ctx); if (!(p.target > 0)) return ""; return "At " + M(p.spend) + " a month, your number is " + M(p.target) + ". Investing " + M(p.monthly) + " a month from " + M(p.start) + " at a " + p.ret + "% real return, you reach it in " + (p.fiYears == null ? "more than 100 years" : p.fiYears.toFixed(1) + " years") + "."; }, open: "planner" },
     { id: "tax", track: "Taxes", title: "Depreciation basics", mins: 4,
       summary: "Why rentals can show a tax loss while paying you cash.",
       body: ["The IRS lets owners of residential rentals deduct the cost of the building, not the land, over 27.5 years. That deduction lowers taxable income even though no cash leaves your account.",
@@ -174,13 +193,23 @@ var LEARN = (function () {
       var sc2 = AIM.score(opp.type, opp.inputs, ctx), t2 = AIM.targetPrice(opp.type, opp.inputs, ctx.settings);
       return "<p><b>" + opp.name + "</b> scores " + sc2.total + " (" + sc2.grade + "). It needs " + M(sc2.r.cash) + " and produces " + M(sc2.r.cfYear) + " a year, a " + P(sc2.r.coc) + " cash on cash return with " + R(sc2.r.dscr) + " coverage.</p><p>" + AIM.recommendation(sc2, t2) + "</p>";
     }
+    if (/debt|pay ?off|credit card|student loan|car loan|avalanche|snowball|owe/.test(s)) {
+      var dl = debtList(ctx); if (!dl.length) return "<p>You have no debts recorded. If you have any, add them in the Planner and I will build a payoff plan.</p>";
+      var pl = ctx.plan || {}, av = AIM.debtPlan(dl, pl.extra || 0, "avalanche"), sb = AIM.debtPlan(dl, pl.extra || 0, "snowball"), tot = dl.reduce(function (a, d) { return a + d.balance; }, 0);
+      if (!av.feasible) return "<p>You owe " + M(tot) + ". Your payments do not cover the interest on every balance, so the debt never gets paid off. Raise the extra payment in the Planner.</p>";
+      return "<p>You owe <b>" + M(tot) + "</b> across " + dl.length + " balance" + (dl.length > 1 ? "s" : "") + ". Paying " + M(av.payment) + " a month:</p>" + list(["<b>Avalanche</b>: debt free in " + av.months + " months, " + M(av.totalInterest) + " of interest", "<b>Snowball</b>: debt free in " + sb.months + " months, " + M(sb.totalInterest) + " of interest"]) + "<p>Pay off " + av.debts[0].name + " first to save the most interest.</p>";
+    }
+    if (/retire|independen|\bfire\b|financial freedom|financially free|how long until|my number/.test(s)) {
+      var pj = projFor(ctx); if (!(pj.target > 0)) return "<p>Add your monthly expenses in Budget and goals and I can work out your independence number.</p>";
+      return "<p>Your independence number is <b>" + M(pj.target) + "</b>, " + 100 / (ctx.plan && ctx.plan.swr || 4) + " times " + M(pj.spend * 12) + " of yearly spending. Investing " + M(pj.monthly) + " a month from " + M(pj.start) + " at a " + pj.ret + "% return after inflation, you reach it in " + (pj.fiYears == null ? "more than 100 years" : "<b>" + pj.fiYears.toFixed(1) + " years</b>") + ".</p><p>The Planner shows how the date moves when you change savings or spending.</p>";
+    }
     if (/budget|spend|expense|saving/.test(s)) {
       var bb = AIM.budget(ctx.budget);
       return "<p>You bring in " + M(bb.income) + " a month and spend " + M(bb.expenses) + ", leaving " + M(bb.fcf) + " of free cash flow. That is a " + P(bb.savingsRate, 0) + " savings rate.</p>";
     }
     if (/net worth|worth|wealth/.test(s)) return "<p>Your net worth is <b>" + M(ctx.netWorth) + "</b>, including " + M(ctx.ownedEquity) + " of equity in assets you own.</p>";
     if (g) return explain(g.id, ctx, opp);
-    return "<p>I answer questions about your numbers. Try one of these:</p>" + list(["What drives this deal?", "What should I offer?", "Am I ready to buy it?", "What are the risks?", "Explain DSCR", "Compare my deals"]);
+    return "<p>I answer questions about your numbers. Try one of these:</p>" + list(["What drives this deal?", "What should I offer?", "Am I ready to buy it?", "What are the risks?", "How do I pay off my debt?", "When can I retire?", "Explain DSCR", "Compare my deals"]);
   }
 
   return { LESSONS: LESSONS, answer: answer };

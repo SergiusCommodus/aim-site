@@ -13,7 +13,11 @@ for (let n = 0; n < 300; n++) {
     ownerComp: R(0, 150e3), addbacks: R(0, 50e3), da: R(0, 50e3), interest: R(0, 30e3) };
   biz.cogs = biz.revenue * R(0.05, 0.5); biz.opex = biz.revenue * R(0.2, 0.6);
   const r = A.run("rental", rental), s = A.run("str", str), b = A.run("business", biz);
-  out.push({ rental, r: { pmt: r.pmt, noi: r.noi, cf: r.cfYear, cash: r.cash, cap: r.cap, coc: r.coc, dscr: isFinite(r.dscr) ? r.dscr : null, beOcc: r.beOcc, irr: r.irr, bal5: r.projection[4].balance, cf5: r.projection[4].cf },
+  const debts = Array.from({ length: 1 + (n % 5) }, (_, k) => ({ name: "D" + k, balance: R(200, 40e3), rate: R(0, 29), min: R(25, 600) }));
+  const extra = R(0, 800), method = n % 2 ? "snowball" : "avalanche", dp = A.debtPlan(debts, extra, method);
+  const pin = { start: R(0, 400e3), monthly: R(0, 5000), ret: R(-2, 10), years: 1 + (n % 40), expenses: R(1500, 12e3), swr: R(3, 5) }, pj = A.projection(pin);
+  out.push({ debts, extra, method, d: { months: dp.months, interest: dp.totalInterest, order: dp.debts.map(x => x.name) }, pin, p: { end: pj.end, target: pj.target, fiMonth: pj.fiMonth },
+    rental, r: { pmt: r.pmt, noi: r.noi, cf: r.cfYear, cash: r.cash, cap: r.cap, coc: r.coc, dscr: isFinite(r.dscr) ? r.dscr : null, beOcc: r.beOcc, irr: r.irr, bal5: r.projection[4].balance, cf5: r.projection[4].cf },
     str, s: { noi: s.noi, cf: s.cfYear, cash: s.cash, beOcc: isFinite(s.beOcc) ? s.beOcc : null, beAdr: s.beAdr, gross: s.gross, ltrCf: s.ltr.cfYear },
     biz, b: { sde: b.sde, ds: b.ds, dscr: isFinite(b.dscr) ? b.dscr : null, cf: b.cfYear, cash: b.cash, multiple: isFinite(b.multiple) ? b.multiple : null } });
 }
