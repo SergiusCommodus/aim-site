@@ -1295,6 +1295,12 @@ var LEARN = (function () {
   var live = store(KEY), demo = store(DKEY), lead = store(LEAD), mode = store(MKEY);
   /* Earlier betas kept the sample portfolio in the main workspace. Move it to the demo slot so the real workspace starts clean. */
   if (live && live.sample && !live.setupDone) { if (!demo) demo = live; demo.sample = true; store(DKEY, demo); live = null; try { localStorage.removeItem(KEY); } catch (e) { } if (!mode) { mode = "demo"; store(MKEY, mode); } }
+  /* Workspaces from before Beta 1.0 have no planner settings or debt terms. Fill in the sample loan terms so the planner works. */
+  if (demo && !demo.plan) {
+    var SAMPLE_TERMS = { "Auto loan": [6.9, 420], "Credit card balance": [22.9, 45], "Student loan": [5.5, 160] };
+    (demo.accounts || []).forEach(function (a) { var t = SAMPLE_TERMS[a.name]; if (a.type === "Liability" && t && a.rate == null) { a.rate = t[0]; a.min = t[1]; } });
+    demo.plan = planDefaults(); store(DKEY, demo);
+  }
   var leadFirst = lead && (lead.first_name || (lead.name || "").split(" ")[0]) || "";
   var ui = { tab: "analysis", filter: "All", compare: [], chatOpp: null, chat: [], lesson: null, oppId: null, plan: "debt" };
   var st = null;

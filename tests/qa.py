@@ -246,9 +246,11 @@ async def main():
 
         # migration of an earlier beta workspace
         await pg.goto(B + "privacy.html")
-        await pg.evaluate("localStorage.clear(); localStorage.setItem('aim.workspace.v1', JSON.stringify({v:1,sample:true,settings:{name:'Old',minDscr:1.25,minCoc:8,reserveMonths:6},budget:{income:[],expenses:[],goals:[]},accounts:[],opps:[{id:'x',type:'rental',name:'Legacy Duplex',status:'Evaluating',inputs:{}}],history:[]}))")
+        await pg.evaluate("localStorage.clear(); localStorage.setItem('aim.workspace.v1', JSON.stringify({v:1,sample:true,settings:{name:'Old',minDscr:1.25,minCoc:8,reserveMonths:6},budget:{income:[],expenses:[],goals:[]},accounts:[{id:'a',name:'Auto loan',type:'Liability',value:14800}],opps:[{id:'x',type:'rental',name:'Legacy Duplex',status:'Evaluating',inputs:{}}],history:[]}))")
         await pg.goto(B + "app.html#opportunities"); await wait(pg, 300)
         ok("Legacy Duplex" in await body() and await pg.locator(".ribbon").count() == 1, "earlier sample workspace moves to the demo")
+        await pg.goto(B + "app.html#planner"); await wait(pg)
+        ok("6.90%" in await body(), "earlier sample loans get planner terms")
 
         for page in ["privacy.html", "terms.html", "404.html", "sitemap.xml", "robots.txt"]:
             r = await pg.goto(B + page); ok(r.status == 200, page + " loads")
