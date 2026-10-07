@@ -17,6 +17,7 @@
 }
 
 *{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
 body{background:var(--paper);color-scheme:light;color:var(--ink);font:400 16px/1.6 var(--body);margin:0}
 .wrap{max-width:1120px;margin:0 auto;padding-inline:20px}
 h1,h2,h3{font-family:var(--display);font-stretch:112%;text-wrap:balance;margin:0;line-height:1.08}
@@ -29,6 +30,10 @@ a{color:inherit}
 
 /* nav */
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--navy);border-bottom:1px solid rgba(255,255,255,.08)}
+.progress{position:absolute;left:0;bottom:-1px;height:2px;width:100%;transform-origin:left;transform:scaleX(var(--p,0));background:linear-gradient(90deg,var(--sky),#fff);opacity:.9;pointer-events:none}
+.nav nav a.link{position:relative;padding-bottom:2px}
+.nav nav a.link::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:1.5px;background:var(--sky);transform:scaleX(0);transform-origin:left;transition:transform var(--d) var(--ease)}
+.nav nav a.link.on::after,.nav nav a.link:hover::after{transform:scaleX(1)}
 .nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
 .mark{display:flex;align-items:center;gap:10px;text-decoration:none}
 .mark img{height:26px;width:auto;display:block}
@@ -40,6 +45,9 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:va
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;font:600 15px/1 var(--body);padding:13px 20px;border-radius:6px;text-decoration:none;background:var(--navy);color:var(--on-navy);transition:background var(--d-fast) var(--ease),color var(--d-fast) var(--ease),box-shadow var(--d-fast) var(--ease),transform var(--d-fast) var(--ease)}
 .btn:hover{background:var(--navy-deep);color:var(--on-navy);box-shadow:0 8px 18px -10px rgba(15,30,58,.55)}
 .btn:active{transform:translateY(1px);box-shadow:none}
+.btn:not(.ghost){position:relative;overflow:hidden}
+.btn:not(.ghost)::after{content:"";position:absolute;top:-40%;bottom:-40%;left:-30%;width:30%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-100%) skewX(-18deg);transition:transform .7s var(--ease)}
+.btn:not(.ghost):hover::after{transform:translateX(460%) skewX(-18deg)}
 .btn:focus-visible{outline:none;box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--navy)}
 .btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
 .btn.ghost:hover{box-shadow:inset 0 0 0 1px var(--navy),0 8px 18px -12px rgba(15,30,58,.35);background:transparent;color:var(--navy)}
@@ -49,7 +57,9 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:va
 @media (max-width:760px){.nav nav a.link:not(.signin){display:none}}
 
 /* hero */
-.hero-band{background:var(--paper);color:var(--ink)}
+.hero-band{position:relative;background:var(--paper);color:var(--ink);overflow:hidden}
+.hero-band::before{content:"";position:absolute;inset:0;background:radial-gradient(900px 420px at 78% 30%,rgba(157,185,234,.28),transparent 70%),radial-gradient(rgba(24,51,100,.08) 1px,transparent 1.2px);background-size:auto,26px 26px;mask-image:linear-gradient(180deg,#000 40%,transparent);-webkit-mask-image:linear-gradient(180deg,#000 40%,transparent);pointer-events:none}
+.hero{position:relative}
 .hero{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;padding-block:64px 72px;align-items:start}
 .hero>*{min-width:0}
 .hero h1{font-size:clamp(38px,5.6vw,64px);font-weight:800;letter-spacing:-.01em;margin-top:18px}
@@ -89,6 +99,9 @@ input[type=range]{width:100%;margin-top:8px;accent-color:var(--accent)}
 /* sections */
 section.block{border-top:1px solid var(--line);padding-block:72px}
 .sec-head{display:grid;grid-template-columns:240px 1fr;gap:32px;margin-bottom:40px}
+.sec-head .eyebrow{position:relative;padding-top:14px}
+.sec-head .eyebrow::before{content:"";position:absolute;left:0;top:0;width:40px;height:2px;background:var(--navy);transform:scaleX(0);transform-origin:left;transition:transform .7s var(--ease) .15s}
+.sec-head.in .eyebrow::before{transform:scaleX(1)}
 .sec-head h2{font-size:clamp(28px,3.6vw,40px);font-weight:700}
 .sec-head p{color:var(--muted);max-width:60ch;margin-top:14px;font-size:17px}
 @media (max-width:760px){.sec-head{grid-template-columns:1fr;gap:12px}section.block{padding-block:52px}}
@@ -304,61 +317,96 @@ footer p+p{margin-top:6px}
 @media (max-width:900px){.proof{grid-template-columns:1fr 1fr}.pf:nth-child(2n){border-right:0}.pf:nth-child(-n+2){border-bottom:1px solid var(--line)}}
 @media (max-width:520px){.proof{grid-template-columns:1fr}.pf{border-right:0;border-bottom:1px solid var(--line)}.pf:last-child{border-bottom:0}}
 
-/* Intro: Omega inspired. A bezel draws on navy, the seconds hand sweeps once, the wordmark resolves, the curtain lifts. ~3.4s, once per visit, skipped for reduced motion. */
-.intro{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 45%,#1E3D74 0%,#183364 45%,#0B1A38 100%);color:#fff;
-  animation:introLift .8s cubic-bezier(.77,0,.18,1) 2.45s forwards}
-.intro .stage{position:relative;width:min(300px,72vw);aspect-ratio:1;display:grid;place-items:center}
-.intro svg.dialsvg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;animation:dialOut .6s cubic-bezier(.6,0,.3,1) 1.7s forwards}
-.intro .bezel{fill:none;stroke:rgba(255,255,255,.85);stroke-width:1;stroke-dasharray:754;stroke-dashoffset:754;animation:draw .9s cubic-bezier(.65,0,.35,1) .1s forwards}
-.intro .bezel2{fill:none;stroke:rgba(157,185,234,.35);stroke-width:.6;stroke-dasharray:691;stroke-dashoffset:691;animation:draw .9s cubic-bezier(.65,0,.35,1) .2s forwards}
-.intro .mins{fill:none;stroke:rgba(255,255,255,.55);stroke-width:5;stroke-dasharray:.5 11.333;opacity:0;animation:fadeIn .4s ease .5s forwards}
-.intro .hrs line{stroke:#fff;stroke-width:2.2;stroke-linecap:round;opacity:0;animation:fadeIn .35s ease forwards}
-.intro .hand{transform-origin:150px 150px;transform:rotate(0deg);opacity:0;animation:fadeIn .2s ease .7s forwards,sweep 1s cubic-bezier(.45,.05,.25,1) .75s forwards}
-.intro .pin{fill:#fff;opacity:0;animation:fadeIn .2s ease .7s forwards}
-.intro .mark{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;opacity:0;transform:scale(.92);filter:blur(6px);animation:markIn .8s cubic-bezier(.2,.7,.2,1) 1.8s forwards}
-.intro .mark img{width:min(190px,46vw);height:auto}
-.intro .mark span{font:500 11px/1 var(--mono);letter-spacing:.6em;text-transform:uppercase;color:var(--sky);white-space:nowrap;padding-left:.6em;animation:track 1s cubic-bezier(.2,.7,.2,1) 1.85s both}
-.intro .rule{position:absolute;left:50%;top:calc(50% + 58px);width:0;height:1px;background:linear-gradient(90deg,transparent,rgba(157,185,234,.8),transparent);transform:translateX(-50%);animation:rule .9s ease 2s forwards}
-.intro .skip{position:absolute;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));background:none;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75);font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:9px 12px;border-radius:999px;cursor:pointer}
+/* Intro: a reticle locks on, the mark resolves, the field parts top and bottom to reveal the page. 3.2s, once per session, skippable. */
+.intro{position:fixed;inset:0;z-index:100;overflow:hidden;color:#fff;pointer-events:auto}
+.intro .panel{position:absolute;left:0;right:0;height:50.5%;background:radial-gradient(140% 120% at 50% 100%,#1E3D74 0%,#183364 45%,#0B1A38 100%)}
+.intro .panel.t{top:0;animation:splitUp .85s cubic-bezier(.77,0,.18,1) 2.6s forwards}
+.intro .panel.b{bottom:0;background:radial-gradient(140% 120% at 50% 0%,#1E3D74 0%,#183364 45%,#0B1A38 100%);animation:splitDown .85s cubic-bezier(.77,0,.18,1) 2.6s forwards}
+.intro .dots{position:absolute;inset:0;background-image:radial-gradient(rgba(157,185,234,.28) 1px,transparent 1.2px);background-size:28px 28px;opacity:0;animation:fadeIn 1s ease .1s forwards,fadeOut .5s ease 2.3s forwards;mask-image:radial-gradient(60% 60% at 50% 50%,#000 20%,transparent 100%);-webkit-mask-image:radial-gradient(60% 60% at 50% 50%,#000 20%,transparent 100%)}
+.intro .stage{position:absolute;inset:0;display:grid;place-items:center;animation:stageOut .32s cubic-bezier(.6,0,.3,1) 2.38s forwards}
+.intro .ret{position:absolute;width:min(320px,76vw);aspect-ratio:1;overflow:visible;animation:retOut .6s cubic-bezier(.6,0,.3,1) 1.55s forwards}
+.intro .ring{fill:none;stroke:rgba(255,255,255,.85);stroke-width:1;stroke-dasharray:754;stroke-dashoffset:754;animation:draw .9s cubic-bezier(.65,0,.35,1) .1s forwards}
+.intro .ring2{fill:none;stroke:rgba(157,185,234,.45);stroke-width:.7;stroke-dasharray:628;stroke-dashoffset:-628;animation:draw .9s cubic-bezier(.65,0,.35,1) .25s forwards}
+.intro .ticks line{stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:0;animation:fadeIn .3s ease forwards}
+.intro .cross line{stroke:#9DB9EA;stroke-width:1.2;stroke-linecap:round;opacity:0}
+.intro .cross .n{animation:fadeIn .2s ease .95s forwards,slideN .55s cubic-bezier(.2,.7,.2,1) .95s forwards}
+.intro .cross .s{animation:fadeIn .2s ease .95s forwards,slideS .55s cubic-bezier(.2,.7,.2,1) .95s forwards}
+.intro .cross .w{animation:fadeIn .2s ease 1.05s forwards,slideW .55s cubic-bezier(.2,.7,.2,1) 1.05s forwards}
+.intro .cross .e{animation:fadeIn .2s ease 1.05s forwards,slideE .55s cubic-bezier(.2,.7,.2,1) 1.05s forwards}
+.intro .lock{fill:#fff;opacity:0;transform-origin:150px 150px;animation:lockIn .35s cubic-bezier(.2,.9,.3,1.4) 1.35s forwards}
+.intro .ripple{fill:none;stroke:#fff;stroke-width:1.5;opacity:0;transform-origin:150px 150px;animation:ripple .7s cubic-bezier(.2,.7,.2,1) 1.4s forwards}
+.intro .flash{fill:none;stroke:#fff;stroke-width:1;opacity:0;animation:flash .5s ease 1.4s}
+.intro .mark{position:relative;display:flex;flex-direction:column;align-items:center;gap:16px;opacity:0;transform:scale(.9);filter:blur(12px);animation:markIn .9s cubic-bezier(.2,.7,.2,1) 1.6s forwards}
+.intro .mark::before{content:"";position:absolute;inset:-60px -120px;background:radial-gradient(closest-side,rgba(157,185,234,.22),transparent);opacity:0;animation:fadeIn .8s ease 1.7s forwards}
+.intro .mark img{position:relative;width:min(200px,48vw);height:auto}
+.intro .mark span{position:relative;font:500 11px/1 var(--mono);letter-spacing:.6em;text-transform:uppercase;color:var(--sky);white-space:nowrap;padding-left:.6em;animation:track 1s cubic-bezier(.2,.7,.2,1) 1.75s both}
+.intro .rule{position:absolute;left:50%;top:calc(50% + 62px);width:0;height:1px;background:linear-gradient(90deg,transparent,rgba(157,185,234,.9),transparent);transform:translateX(-50%);animation:rule .9s cubic-bezier(.2,.7,.2,1) 1.95s forwards}
+.intro .skip{position:absolute;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:2;background:none;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75);font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:9px 12px;border-radius:999px;cursor:pointer;opacity:0;animation:fadeIn .6s ease .8s forwards,fadeOut .3s ease 2.5s forwards;transition:color .15s,border-color .15s}
 .intro .skip:hover{color:#fff;border-color:#fff}
-.intro.out{animation:introLift .6s cubic-bezier(.77,0,.18,1) forwards}
+.intro.out{pointer-events:none}
+.intro.out .panel.t{animation:splitUp .6s cubic-bezier(.77,0,.18,1) forwards}
+.intro.out .panel.b{animation:splitDown .6s cubic-bezier(.77,0,.18,1) forwards}
+.intro.out .stage,.intro.out .dots,.intro.out .skip{animation:fadeOut .25s ease forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes fadeIn{to{opacity:1}}
-@keyframes sweep{to{transform:rotate(360deg)}}
-@keyframes dialOut{to{opacity:0;transform:scale(1.35);filter:blur(2px)}}
+@keyframes fadeOut{to{opacity:0}}
+@keyframes slideN{from{transform:translateY(-70px)}to{transform:none}}
+@keyframes slideS{from{transform:translateY(70px)}to{transform:none}}
+@keyframes slideW{from{transform:translateX(-70px)}to{transform:none}}
+@keyframes slideE{from{transform:translateX(70px)}to{transform:none}}
+@keyframes lockIn{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}
+@keyframes ripple{from{opacity:.9;transform:scale(.2)}to{opacity:0;transform:scale(2.6)}}
+@keyframes flash{0%{opacity:0}30%{opacity:.9}100%{opacity:0}}
+@keyframes retOut{to{opacity:0;transform:scale(1.5);filter:blur(3px)}}
 @keyframes markIn{to{opacity:1;transform:none;filter:none}}
-@keyframes track{from{letter-spacing:1.2em;opacity:0}to{letter-spacing:.6em;opacity:1}}
-@keyframes rule{to{width:min(260px,60vw)}}
-@keyframes introLift{to{transform:translateY(-100%);visibility:hidden}}
+@keyframes track{from{letter-spacing:1.3em;opacity:0}to{letter-spacing:.6em;opacity:1}}
+@keyframes rule{to{width:min(280px,64vw)}}
+@keyframes stageOut{to{opacity:0;transform:scale(1.04);filter:blur(4px)}}
+@keyframes splitUp{to{transform:translateY(-101%)}}
+@keyframes splitDown{to{transform:translateY(101%)}}
 html.intro-seen .intro{display:none}
-html.intro-play .hero>*{animation:heroUp .9s cubic-bezier(.2,.7,.2,1) 2.65s both}
-html.intro-play .hero>*+*{animation-delay:2.8s}
-html.intro-seen .hero>*{animation:heroUp .8s cubic-bezier(.2,.7,.2,1) both}
-html.intro-seen .hero>*+*{animation-delay:.12s}
-@keyframes heroUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.intro{display:none}html.intro-play .hero>*{animation:none}}
+/* hero arrival: words rise one by one, the analyzer settles in from the right */
+.hero h1 .w{display:inline-block}
+html.intro-play .hero h1 .w{animation:wordUp .75s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(2.85s + var(--i,0) * 70ms)}
+html.intro-play .hero .eyebrow,html.intro-play .hero .lede,html.intro-play .hero .cta,html.intro-play .hero .verbs{animation:heroUp .8s cubic-bezier(.2,.7,.2,1) both}
+html.intro-play .hero .eyebrow{animation-delay:2.8s}html.intro-play .hero .lede{animation-delay:3.2s}html.intro-play .hero .cta{animation-delay:3.3s}html.intro-play .hero .verbs{animation-delay:3.4s}
+html.intro-play .hero .sheet{animation:sheetIn 1.1s cubic-bezier(.2,.7,.2,1) 3.05s both}
+html.intro-seen .hero h1 .w{animation:wordUp .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.1s + var(--i,0) * 60ms)}
+html.intro-seen .hero .eyebrow,html.intro-seen .hero .lede,html.intro-seen .hero .cta,html.intro-seen .hero .verbs{animation:heroUp .7s cubic-bezier(.2,.7,.2,1) both}
+html.intro-seen .hero .lede{animation-delay:.4s}html.intro-seen .hero .cta{animation-delay:.5s}html.intro-seen .hero .verbs{animation-delay:.6s}
+html.intro-seen .hero .sheet{animation:sheetIn 1s cubic-bezier(.2,.7,.2,1) .3s both}
+.hero{perspective:1400px}
+@keyframes wordUp{from{opacity:0;transform:translateY(.6em) rotate(1.5deg)}to{opacity:1;transform:none}}
+@keyframes heroUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes sheetIn{from{opacity:0;transform:translateX(40px) rotateY(-6deg)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.intro{display:none}.hero h1 .w,.hero .eyebrow,.hero .lede,.hero .cta,.hero .verbs,.hero .sheet{animation:none!important}}
+{{CSS:ticker}}
 </style>
 
 
 <script>(function(){var d=document.documentElement;try{if(sessionStorage.getItem("aim.intro")||matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("intro-seen");return;}sessionStorage.setItem("aim.intro","1");}catch(e){}d.classList.add("intro-play");})();</script>
 <div class="intro" id="intro" aria-hidden="true">
+  <div class="panel t"></div><div class="panel b"></div>
+  <div class="dots"></div>
   <div class="stage">
-    <svg class="dialsvg" viewBox="0 0 300 300">
-      <circle class="bezel" cx="150" cy="150" r="120" transform="rotate(-90 150 150)"/>
-      <circle class="bezel2" cx="150" cy="150" r="110" transform="rotate(-90 150 150)"/>
-      <circle class="mins" cx="150" cy="150" r="113" transform="rotate(-90.25 150 150)"/>
-      <g class="hrs"><line x1="150" y1="34" x2="150" y2="48" transform="rotate(0 150 150)" style="animation-delay:0.55s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(30 150 150)" style="animation-delay:0.60s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(60 150 150)" style="animation-delay:0.65s"/><line x1="150" y1="34" x2="150" y2="48" transform="rotate(90 150 150)" style="animation-delay:0.70s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(120 150 150)" style="animation-delay:0.75s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(150 150 150)" style="animation-delay:0.80s"/><line x1="150" y1="34" x2="150" y2="48" transform="rotate(180 150 150)" style="animation-delay:0.85s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(210 150 150)" style="animation-delay:0.90s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(240 150 150)" style="animation-delay:0.95s"/><line x1="150" y1="34" x2="150" y2="48" transform="rotate(270 150 150)" style="animation-delay:1.00s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(300 150 150)" style="animation-delay:1.05s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(330 150 150)" style="animation-delay:1.10s"/></g>
-      <g class="hand"><line x1="150" y1="172" x2="150" y2="40" stroke="#9DB9EA" stroke-width="1.4" stroke-linecap="round"/><circle cx="150" cy="56" r="4" fill="none" stroke="#9DB9EA" stroke-width="1.4"/><line x1="150" y1="172" x2="150" y2="186" stroke="#9DB9EA" stroke-width="3" stroke-linecap="round"/></g>
-      <circle class="pin" cx="150" cy="150" r="3.2"/>
+    <svg class="ret" viewBox="0 0 300 300">
+      <circle class="ring" cx="150" cy="150" r="120" transform="rotate(-90 150 150)"/>
+      <circle class="ring2" cx="150" cy="150" r="100" transform="rotate(-90 150 150)"/>
+      <g class="ticks"><line x1="150" y1="34" x2="150" y2="48" transform="rotate(0 150 150)" style="animation-delay:0.50s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(30 150 150)" style="animation-delay:0.55s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(60 150 150)" style="animation-delay:0.59s"/><line x1="150" y1="34" x2="150" y2="48" transform="rotate(90 150 150)" style="animation-delay:0.64s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(120 150 150)" style="animation-delay:0.68s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(150 150 150)" style="animation-delay:0.72s"/><line x1="150" y1="34" x2="150" y2="48" transform="rotate(180 150 150)" style="animation-delay:0.77s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(210 150 150)" style="animation-delay:0.81s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(240 150 150)" style="animation-delay:0.86s"/><line x1="150" y1="34" x2="150" y2="48" transform="rotate(270 150 150)" style="animation-delay:0.91s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(300 150 150)" style="animation-delay:0.95s"/><line x1="150" y1="36" x2="150" y2="44" transform="rotate(330 150 150)" style="animation-delay:0.99s"/></g>
+      <g class="cross"><line class="n" x1="150" y1="60" x2="150" y2="128"/><line class="s" x1="150" y1="172" x2="150" y2="240"/><line class="w" x1="60" y1="150" x2="128" y2="150"/><line class="e" x1="172" y1="150" x2="240" y2="150"/></g>
+      <circle class="flash" cx="150" cy="150" r="120"/>
+      <circle class="ripple" cx="150" cy="150" r="30"/>
+      <circle class="lock" cx="150" cy="150" r="4"/>
     </svg>
-    <div class="mark"><img src="{{LOGO}}" alt="" width="190" height="62"><span>Artemis Investment Metrics</span></div>
+    <div class="mark"><img src="{{LOGO}}" alt="" width="200" height="65"><span>Artemis Investment Metrics</span></div>
     <i class="rule"></i>
   </div>
   <button class="skip" type="button" id="skipIntro" aria-label="Skip intro">Skip</button>
 </div>
-<script>(function(){var el=document.getElementById("intro");if(!el)return;function end(){if(el.classList.contains("out"))return;el.classList.add("out");document.documentElement.classList.remove("intro-play");setTimeout(function(){el.remove();},650);}
-document.getElementById("skipIntro").addEventListener("click",end);el.addEventListener("click",end);window.addEventListener("keydown",function k(e){if(e.key==="Escape"||e.key===" "||e.key==="Enter"){end();window.removeEventListener("keydown",k);}});
-el.addEventListener("animationend",function(e){if(e.animationName==="introLift"){el.remove();}});})();</script>
+<script>(function(){var el=document.getElementById("intro");if(!el)return;
+function end(){if(el.classList.contains("out"))return;el.classList.add("out");document.documentElement.classList.remove("intro-play");document.documentElement.classList.add("intro-seen");el.style.display="block";setTimeout(function(){el.remove();},700);}
+document.getElementById("skipIntro").addEventListener("click",end);window.addEventListener("keydown",function k(e){if(e.key==="Escape"||e.key===" "||e.key==="Enter"){end();window.removeEventListener("keydown",k);}});
+el.querySelector(".panel.b").addEventListener("animationend",function(e){if(e.animationName==="splitDown"){el.remove();}});})();</script>
 <header>
   <div class="wrap nav">
     <a class="mark" href="#top" aria-label="AIM home">
@@ -376,6 +424,7 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
       <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Menu"><span></span><span></span></button>
     </nav>
   </div>
+  <i class="progress" id="progress" aria-hidden="true"></i>
   <nav class="mnav" id="mnav" hidden aria-label="Mobile"><a href="#workspace">Product</a><a href="#modules">Modules</a><a href="#pricing">Pricing</a><a href="#roadmap">Roadmap</a><a href="#faq">FAQ</a><a href="app.html#demo">Live demo</a><a href="app.html">Sign in</a></nav>
 </header>
 
@@ -719,6 +768,8 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
 <script>
 (function(){
   var $=function(id){return document.getElementById(id)};
+  /* split the headline into words so they can rise one by one */
+  var h1=document.querySelector(".hero h1"); if(h1){var wi=0; h1.innerHTML=h1.innerHTML.replace(/(<em>)?([^\s<]+)(<\/em>)?(\s|$)/g,function(m,o,w,c,sp){return '<span class="w" style="--i:'+(wi++)+'">'+(o||"")+w+(c||"")+"</span>"+(sp||"");});}
   var usd=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
   var VAC=0.06, TAXINS=0.018, REPAIR=0.10, MGMT=0.08, CLOSE=0.03, YEARS=30;
 
@@ -773,7 +824,8 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
   }
   if("IntersectionObserver" in window && !reduced){
     var io=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return; e.target.classList.add("in"); e.target.querySelectorAll("[data-count]").forEach(countUp); io.unobserve(e.target);});},{rootMargin:"0px 0px -10% 0px",threshold:.12});
-    document.querySelectorAll(".rv0").forEach(function(el){io.observe(el)});
+    document.querySelectorAll(".rv0").forEach(function(el){ if(!el.classList.contains("sec-head")&&!el.querySelector(".rvs")){Array.prototype.forEach.call(el.children,function(c,i){c.classList.add("rvs");c.style.setProperty("--i",Math.min(i,8));});} io.observe(el)});
+    var prog=document.getElementById("progress"); if(prog){var pt=false; function up(){var d=document.documentElement, m=d.scrollHeight-innerHeight; prog.style.setProperty("--p", m>0?Math.min(1,scrollY/m):0); pt=false;} addEventListener("scroll",function(){if(!pt){pt=true;requestAnimationFrame(up);}},{passive:true}); up();}
     var links=Array.prototype.slice.call(document.querySelectorAll(".nav nav a.link[href^='#']")), secs=links.map(function(a){return document.querySelector(a.getAttribute("href"))}).filter(Boolean);
     var spy=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return; links.forEach(function(a){a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id)});});},{rootMargin:"-40% 0px -55% 0px"});
     secs.forEach(function(sec){spy.observe(sec)});
@@ -788,3 +840,4 @@ el.addEventListener("animationend",function(e){if(e.animationName==="introLift")
   if(mb){mb.addEventListener("click",function(){var open=mn.hidden;mn.hidden=!open;mb.setAttribute("aria-expanded",String(open));});mn.addEventListener("click",function(e){if(e.target.tagName==="A"){mn.hidden=true;mb.setAttribute("aria-expanded","false");}});}
 })();
 </script>
+{{TICKER}}

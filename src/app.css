@@ -33,8 +33,11 @@ html.rail-collapsed .rail .collapse{justify-content:center;padding:0}
 html.rail-collapsed .rail .collapse svg{transform:rotate(180deg)}
 html.rail-collapsed .rail .sep{margin:8px 6px}
 .main{min-width:0;padding:28px 32px 72px;background:var(--paper);border-left:0}
+.main{transition:opacity 130ms var(--ease-in),transform 130ms var(--ease-in)}
+.main.leave{opacity:0;transform:translateY(-6px)}
 .main>*{animation:none}
-.main.enter>*{animation:rise var(--d-slow) var(--ease) both;animation-delay:calc(var(--i,0) * 45ms)}
+.main.enter>*{animation:arrive var(--d-slow) var(--ease) both;animation-delay:calc(var(--i,0) * 45ms)}
+@keyframes arrive{from{opacity:0;transform:translateY(10px);filter:blur(5px)}60%{filter:blur(0)}to{opacity:1;transform:none;filter:none}}
 #tabBody.enter>*{animation:rise var(--d-slow) var(--ease) both;animation-delay:calc(var(--i,0) * 45ms)}
 #tabBody.enter>.an>*{animation:rise var(--d-slow) var(--ease) both}
 #tabBody.enter>.an>*+*{animation-delay:60ms}
@@ -48,7 +51,8 @@ html.rail-collapsed .rail .sep{margin:8px 6px}
 .modesw button{position:relative;display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--on-navy-muted);font:600 13px var(--body);padding:6px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:color var(--d-fast) var(--ease),background var(--d) var(--ease)}
 .modesw button svg{width:15px;height:15px}
 .modesw button:hover{color:#fff}
-.modesw button[aria-pressed="true"]{background:#fff;color:var(--navy)}
+.modesw button[aria-pressed="true"]{color:var(--navy)}
+.modesw .msi{position:absolute;top:3px;bottom:3px;left:3px;width:0;border-radius:6px;background:#fff;transition:left var(--d) var(--ease),width var(--d) var(--ease)}
 .tb-search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--on-navy-muted);border-radius:8px;padding:7px 10px;font:500 13px var(--body);cursor:pointer;min-width:150px;transition:border-color var(--d-fast) var(--ease),color var(--d-fast) var(--ease)}
 .tb-search:hover{color:#fff;border-color:rgba(255,255,255,.3)}
 .tb-search svg{width:15px;height:15px}
@@ -89,7 +93,9 @@ html.has-ribbon .rail{top:calc(104px + env(safe-area-inset-top,0px));height:calc
 .stack{display:flex;flex-direction:column;gap:18px;min-width:0}
 
 /* kpi tiles: the hero tile is the one navy surface on a page */
-.kpi{padding:16px 18px;transition:box-shadow var(--d-fast) var(--ease),transform var(--d-fast) var(--ease)}
+.kpi{padding:16px 18px;transition:box-shadow var(--d) var(--ease),transform var(--d) var(--ease),border-color var(--d) var(--ease)}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-2);border-color:var(--line-2)}
+.kpi.hero:hover{box-shadow:0 16px 30px -14px rgba(24,51,100,.7)}
 .kpi>small{display:block;font-size:13px;color:var(--muted)}
 .kpi>strong{display:block;font:500 26px/1.25 var(--mono);font-variant-numeric:tabular-nums;margin-top:4px;color:var(--ink)}
 .kpi>span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
@@ -483,3 +489,6 @@ html.app-intro-play .topbar{animation:fade .6s var(--ease) 1.2s both}
   .doc{border:0;max-width:none;padding:0;box-shadow:none}
   body{background:#fff}
 }
+html.has-ticker .rail{height:calc(100vh - 98px - env(safe-area-inset-bottom,0px))}
+html.has-ticker.has-ribbon .rail{height:calc(100vh - 142px - env(safe-area-inset-bottom,0px))}
+@media (max-width:900px){html.has-ticker .rail,html.has-ticker.has-ribbon .rail{height:auto}}

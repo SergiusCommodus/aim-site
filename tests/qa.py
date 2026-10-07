@@ -33,6 +33,13 @@ async def main():
         ok(await pg.locator("a[href='demo.html']").count() >= 3, "landing links to get started")
         ok("Request a demo" not in await body(), "no stale request a demo wording on the landing page")
 
+        ok(await pg.locator("#ticker .tk-run").count() == 2, "news ticker loops with a duplicated run")
+        await pg.click("#tkClose"); await wait(pg, 400)
+        ok(await pg.locator("#ticker").count() == 0, "news ticker can be hidden")
+        await pg.reload(); await wait(pg, 600)
+        ok(await pg.locator("#ticker").count() == 0, "hidden ticker stays hidden this session")
+        await pg.evaluate("sessionStorage.removeItem('aim.ticker')")
+
         # ---------- start screen ----------
         await pg.goto(B + "app.html"); await wait(pg, 300)
         ok("How do you want to start?" in await body(), "fresh visit shows the start screen")

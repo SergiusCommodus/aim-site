@@ -39,6 +39,7 @@ input[aria-invalid="true"]{border-color:var(--bad)}
 .done .btn{width:100%;padding:15px}
 @media (max-width:900px){.demo{grid-template-columns:1fr;gap:36px;padding-block:36px 56px}}
 @media (max-width:480px){form .fields,.opts{grid-template-columns:1fr}.formcard{padding:22px 18px}}
+{{CSS:ticker}}
 </style>
 </head>
 <body>
@@ -133,5 +134,6 @@ input[aria-invalid="true"]{border-color:var(--bad)}
   Object.keys(RULES).forEach(function (id) { var el = document.getElementById(id); el.addEventListener(el.tagName === "SELECT" ? "change" : "input", function () { if (el.getAttribute("aria-invalid") === "true") check(id); }); });
 })();
 </script>
+{{TICKER}}
 </body>
 </html>

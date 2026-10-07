@@ -1,0 +1,18 @@
+<aside class="ticker" id="ticker" aria-label="AIM news">
+  <span class="tk-label">News</span>
+  <div class="tk-track" id="tkTrack"><div class="tk-run">
+    <span>AIM Beta 1.0 is live. Explore the demo or set up your own workspace in five minutes.</span>
+    <span>New: a debt payoff planner and a financial independence projection, built from your own budget.</span>
+    <span>Share links carry an analysis in the URL, so a partner or lender can open it in AIM.</span>
+    <span>Beta members lock in AIM Core at $15 a month when it launches.</span>
+    <span>Every release is checked against 300 random deals per model and 100+ browser tests.</span>
+    <span>15 lessons in AIM Learning now use your numbers, including the two new planning lessons.</span>
+    <span>AIMBot answers questions about debt payoff and your independence number.</span>
+  </div></div>
+  <button class="tk-x" id="tkClose" aria-label="Hide news">×</button>
+</aside>
+<script>(function(){var t=document.getElementById("ticker");if(!t)return;try{if(sessionStorage.getItem("aim.ticker")==="off"){t.remove();return;}}catch(e){}
+var run=t.querySelector(".tk-run"),clone=run.cloneNode(true);clone.setAttribute("aria-hidden","true");t.querySelector(".tk-track").appendChild(clone);
+document.documentElement.classList.add("has-ticker");
+function fit(){var w=run.scrollWidth;t.style.setProperty("--tk-dur",Math.max(30,Math.round(w/55))+"s");}fit();addEventListener("resize",fit);setTimeout(fit,600);
+document.getElementById("tkClose").addEventListener("click",function(){t.classList.add("off");document.documentElement.classList.remove("has-ticker");try{sessionStorage.setItem("aim.ticker","off");}catch(e){}setTimeout(function(){t.remove();},300);});})();</script>

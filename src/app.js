@@ -275,13 +275,18 @@
     var parts = Object.keys(el.dataset || {}).map(function (k) { return "[data-" + k.replace(/[A-Z]/g, function (c) { return "-" + c.toLowerCase(); }) + '="' + el.dataset[k] + '"]'; });
     return parts.length ? el.tagName.toLowerCase() + parts.join("") : null;
   }
+  var tbHtml = "";
   function topbar() {
     var slot = $("#wsSlot"); if (!slot) return;
-    if (!st || route().v === "setup") { slot.innerHTML = '<a class="tb-link" href="index.html">Back to the site</a>'; return; }
+    if (!st || route().v === "setup") { tbHtml = ""; slot.innerHTML = '<a class="tb-link" href="index.html">Back to the site</a>'; return; }
     var first = (st.settings.name || "").trim();
-    slot.innerHTML = '<div class="modesw" role="group" aria-label="Workspace"><button data-act="mode" data-v="demo" aria-pressed="' + (mode === "demo") + '">' + ic("demo") + '<span>Demo</span></button><button data-act="mode" data-v="live" aria-pressed="' + (mode === "live") + '">' + ic("me") + "<span>" + (live ? "My workspace" : "Set up mine") + "</span></button></div>" +
+    var html = '<div class="modesw" role="group" aria-label="Workspace"><i class="msi" aria-hidden="true"></i><button data-act="mode" data-v="demo">' + ic("demo") + '<span>Demo</span></button><button data-act="mode" data-v="live">' + ic("me") + "<span>" + (live ? "My workspace" : "Set up mine") + "</span></button></div>" +
       '<button class="tb-search" data-act="palette" aria-label="Search and commands">' + ic("search") + '<span>Search</span><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl ") + "K</kbd></button>" +
       '<span class="who"><span class="av" aria-hidden="true">' + esc((first || (mode === "demo" ? "D" : "A")).charAt(0).toUpperCase()) + '</span><span class="wsname">' + esc(mode === "demo" ? "Demo workspace" : first ? first + "'s workspace" : "Your workspace") + "</span></span>";
+    var fresh = html !== tbHtml; if (fresh) { tbHtml = html; slot.innerHTML = html; }
+    $$(".modesw button", slot).forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === mode); });
+    var on = slot.querySelector('.modesw button[data-v="' + mode + '"]'), pill = slot.querySelector(".msi");
+    if (on && pill) { if (fresh) pill.style.transition = "none"; pill.style.left = on.offsetLeft + "px"; pill.style.width = on.offsetWidth + "px"; if (fresh) { void pill.offsetWidth; pill.style.transition = ""; } }
   }
   try { if (localStorage.getItem("aim.rail") === "1") document.documentElement.classList.add("rail-collapsed"); } catch (e) { }
   var REDUCED = (function () { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
@@ -1159,7 +1164,10 @@
       render(); if (x) offerImport(x); else toast("That share link is damaged or incomplete."); return;
     }
     if (h === "#demo") { if (mode !== "demo" || !st) setMode("demo", !st); try { history.replaceState(null, "", location.pathname + location.search + "#dashboard"); } catch (e) { } }
-    if (h !== "#learn") ui.lesson = null; render();
+    if (h !== "#learn") ui.lesson = null;
+    var mn = $("#main"), nextKey = h.replace(/^#(welcome|demo|start)$/, "#dashboard") + "|" + mode + "|" + ui.lesson + "|" + ui.plan;
+    if (mn && st && !REDUCED && nextKey !== lastRoute && !/^#(setup|start)$/.test(h)) { mn.classList.add("leave"); setTimeout(function () { mn.classList.remove("leave"); render(); }, 130); }
+    else render();
   });
 
   render();

@@ -27,7 +27,8 @@ HEAD = "\n".join([
 ])
 
 def fill(t, extra=None):
-    t = t.replace("{{CSS:shared}}", rd("shared.css")).replace("{{CSS:app}}", rd("app.css"))
+    t = re.sub(r"\{\{CSS:([a-z]+)\}\}", lambda m: rd(m.group(1) + ".css"), t)
+    t = t.replace("{{TICKER}}", rd("ticker.html"))
     for js in ("engine", "learn", "app"):
         t = t.replace("{{JS:%s}}" % js, rd(js + ".js").replace("</script", "<\\/script"))
     t = t.replace("{{HEAD}}", HEAD).replace("{{LOGO}}", logo).replace("{{FORM_ENDPOINT}}", FORM_ENDPOINT)
