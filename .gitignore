@@ -1,3 +1,4 @@
 artifact/
 page.html
 __pycache__/
+node_modules/

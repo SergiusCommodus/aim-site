@@ -98,7 +98,7 @@ input[type=range]{width:100%;margin-top:8px;accent-color:var(--accent)}
 @media (max-width:480px){.inputs{grid-template-columns:1fr}.outs{grid-template-columns:1fr 1fr}.out:nth-child(3n){border-right:1px solid var(--line)}.out:nth-child(2n){border-right:0}}
 
 /* sections */
-section.block{border-top:1px solid var(--line);padding-block:72px}
+section.block{border-top:1px solid var(--line);padding-block:72px;content-visibility:auto;contain-intrinsic-size:auto 640px}
 .sec-head{display:grid;grid-template-columns:240px 1fr;gap:32px;margin-bottom:40px}
 .sec-head .eyebrow{position:relative;padding-top:14px}
 .sec-head .eyebrow::before{content:"";position:absolute;left:0;top:0;width:40px;height:2px;background:var(--navy);transform:scaleX(0);transform-origin:left;transition:transform .7s var(--ease) .15s}
@@ -399,7 +399,7 @@ html.intro-seen .hero .sheet{animation:sheetIn 1s cubic-bezier(.2,.7,.2,1) .3s b
       <circle class="ripple" cx="150" cy="150" r="30"/>
       <circle class="lock" cx="150" cy="150" r="4"/>
     </svg>
-    <div class="mark"><img src="{{LOGO}}" alt="" width="200" height="65"><span>Artemis Investment Metrics</span></div>
+    <div class="mark"><img src="{{LOGO}}" alt="" width="284" height="92"><span>Artemis Investment Metrics</span></div>
     <i class="rule"></i>
   </div>
   <button class="skip" type="button" id="skipIntro" aria-label="Skip intro">Skip</button>
@@ -487,7 +487,7 @@ el.querySelector(".panel.b").addEventListener("animationend",function(e){if(e.an
       </div>
       <div class="preview rv0">
         <div class="shotwrap rvs" style="--i:0"><div class="shot" id="shot" aria-label="The AIM dashboard">
-          <div class="top"><img src="{{LOGO}}" alt=""><div class="pillw"><span>Demo</span><span class="on">My workspace</span></div></div>
+          <div class="top"><img src="{{LOGO}}" alt="" width="284" height="92"><div class="pillw"><span>Demo</span><span class="on">My workspace</span></div></div>
           <div class="frame">
             <div class="rail"><span class="on">Dashboard</span><span>Opportunities</span><span>Compare</span><i></i><span>Budget and goals</span><span>Net worth</span><span>Planner</span><i></i><span>AIMBot</span><span>AIM Learning</span></div>
             <div class="main">

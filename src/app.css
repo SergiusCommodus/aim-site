@@ -442,7 +442,8 @@ p.note{border-top:0}
 #palList .pg{font:600 12px/1.4 var(--body);letter-spacing:.04em;color:var(--faint);padding:12px 12px 6px}
 
 /* app intro: the mark resolves, then the workspace rises in. One second, once per session. */
-.app-intro{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:var(--navy);animation:introOut .5s var(--ease-in) 1.15s forwards}
+.app-intro{display:none}
+html.app-intro-play .app-intro{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:var(--navy);animation:introOut .5s var(--ease-in) 1.15s forwards}
 .app-intro img{width:min(180px,44vw);height:auto;opacity:0;filter:blur(10px);transform:scale(.94);animation:markIn .8s var(--ease) .1s forwards}
 .app-intro .glow{position:absolute;width:60vmax;height:60vmax;border-radius:50%;background:radial-gradient(circle,rgba(157,185,234,.22),transparent 60%);animation:fade .9s var(--ease) both}
 @keyframes markIn{to{opacity:1;filter:none;transform:none}}

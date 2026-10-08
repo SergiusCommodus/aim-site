@@ -18,7 +18,7 @@ During the beta all workspace data is saved in the visitor's browser. No server 
 
 ## Folder layout
 * `src/` the files you edit
-* `build.py` builds the site into `docs/`. Run `python3 build.py`
+* `build.py` builds the site into `docs/`. Run `python3 build.py`. Run `npm install` once first so the build can minify CSS and JavaScript (it still builds without it, just unminified). The app's script is written to `docs/assets/app.<hash>.js` so browsers cache it between visits.
 * `docs/` the published site (GitHub Pages serves this folder)
 * `assets/` logo files
 

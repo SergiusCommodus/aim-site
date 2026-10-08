@@ -280,13 +280,13 @@
     var slot = $("#wsSlot"); if (!slot) return;
     if (!st || route().v === "setup") { tbHtml = ""; slot.innerHTML = '<a class="tb-link" href="index.html">Back to the site</a>'; return; }
     var first = (st.settings.name || "").trim();
-    var html = '<div class="modesw" role="group" aria-label="Workspace"><i class="msi" aria-hidden="true"></i><button data-act="mode" data-v="demo">' + ic("demo") + '<span>Demo</span></button><button data-act="mode" data-v="live">' + ic("me") + "<span>" + (live ? "My workspace" : "Set up mine") + "</span></button></div>" +
+    var html = '<div class="modesw" role="group" aria-label="Workspace"><i class="msi" aria-hidden="true"></i><button data-act="mode" data-v="demo" aria-label="Demo workspace">' + ic("demo") + '<span>Demo</span></button><button data-act="mode" data-v="live" aria-label="' + (live ? "My workspace" : "Set up my workspace") + '">' + ic("me") + "<span>" + (live ? "My workspace" : "Set up mine") + "</span></button></div>" +
       '<button class="tb-search" data-act="palette" aria-label="Search and commands">' + ic("search") + '<span>Search</span><kbd>' + (/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl ") + "K</kbd></button>" +
       '<span class="who"><span class="av" aria-hidden="true">' + esc((first || (mode === "demo" ? "D" : "A")).charAt(0).toUpperCase()) + '</span><span class="wsname">' + esc(mode === "demo" ? "Demo workspace" : first ? first + "'s workspace" : "Your workspace") + "</span></span>";
     var fresh = html !== tbHtml; if (fresh) { tbHtml = html; slot.innerHTML = html; }
     $$(".modesw button", slot).forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === mode); });
     var on = slot.querySelector('.modesw button[data-v="' + mode + '"]'), pill = slot.querySelector(".msi");
-    if (on && pill) { if (fresh) pill.style.transition = "none"; pill.style.left = on.offsetLeft + "px"; pill.style.width = on.offsetWidth + "px"; if (fresh) { void pill.offsetWidth; pill.style.transition = ""; } }
+    if (on && pill) requestAnimationFrame(function () { if (fresh) pill.style.transition = "none"; pill.style.left = on.offsetLeft + "px"; pill.style.width = on.offsetWidth + "px"; if (fresh) { void pill.offsetWidth; pill.style.transition = ""; } });
   }
   try { if (localStorage.getItem("aim.rail") === "1") document.documentElement.classList.add("rail-collapsed"); } catch (e) { }
   var REDUCED = (function () { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
@@ -326,7 +326,7 @@
     var routeKey = location.hash.replace(/^#(welcome|demo|start)$/, "#dashboard") + "|" + mode + "|" + ui.lesson + "|" + ui.plan;
     var pageChanged = routeKey !== lastRoute, tabChanged = !pageChanged && ui.tab !== lastTab;
     main.innerHTML = VIEWS[view](r);
-    moveIndicator(cur);
+    requestAnimationFrame(function () { moveIndicator(cur); });
     bindCharts(pageChanged || tabChanged);
     if (VIEWS[view].after) VIEWS[view].after(r);
     if (pageChanged) { lastRoute = routeKey; lastTab = ui.tab; window.scrollTo(0, 0); enter(main); }
@@ -552,7 +552,7 @@
 
   function goalRow(g) {
     var p = g.target > 0 ? Math.min(1, g.saved / g.target) : 0, left = Math.max(0, g.target - g.saved), mo = g.monthly > 0 ? Math.ceil(left / g.monthly) : null;
-    return '<div class="goal"><div class="top"><b>' + esc(g.name) + '</b><span class="num">' + M(g.saved) + " of " + M(g.target) + '</span></div><div class="bar-p" role="progressbar" aria-valuenow="' + Math.round(p * 100) + '" aria-valuemin="0" aria-valuemax="100"><i style="width:' + (p * 100).toFixed(1) + '%"></i></div><small>' + (left <= 0 ? "Reached" : mo ? "About " + mo + " months at " + M(g.monthly) + " a month, " + ymLabel(addMonths(NOW, mo)) : "Add a monthly amount to see a finish date") + "</small></div>";
+    return '<div class="goal"><div class="top"><b>' + esc(g.name) + '</b><span class="num">' + M(g.saved) + " of " + M(g.target) + '</span></div><div class="bar-p" role="progressbar" aria-label="' + esc(g.name) + ' progress" aria-valuenow="' + Math.round(p * 100) + '" aria-valuemin="0" aria-valuemax="100"><i style="width:' + (p * 100).toFixed(1) + '%"></i></div><small>' + (left <= 0 ? "Reached" : mo ? "About " + mo + " months at " + M(g.monthly) + " a month, " + ymLabel(addMonths(NOW, mo)) : "Add a monthly amount to see a finish date") + "</small></div>";
   }
   function attention(c, evals, owned, b) {
     var out = [];

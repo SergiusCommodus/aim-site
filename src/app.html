@@ -12,7 +12,8 @@
 </style>
 </head>
 <body>
-<script>(function(){var d=document.documentElement;try{if(sessionStorage.getItem("aim.intro")||matchMedia("(prefers-reduced-motion: reduce)").matches)return;sessionStorage.setItem("aim.intro","1");}catch(e){return;}d.classList.add("app-intro-play");document.write('<div class="app-intro" id="appIntro" aria-hidden="true"><div class="glow"></div><img src="{{LOGO}}" alt=""></div>');setTimeout(function(){var i=document.getElementById("appIntro");if(i)i.remove();},1800);})();</script>
+<script>(function(){var d=document.documentElement;try{if(sessionStorage.getItem("aim.intro")||matchMedia("(prefers-reduced-motion: reduce)").matches)return;sessionStorage.setItem("aim.intro","1");}catch(e){return;}d.classList.add("app-intro-play");setTimeout(function(){var i=document.getElementById("appIntro");if(i)i.remove();},1800);})();</script>
+<div class="app-intro" id="appIntro" aria-hidden="true"><div class="glow"></div><img src="{{LOGO}}" alt="" width="284" height="92"></div>
 <header class="topbar"><div class="bar" style="padding-inline:20px">
   <a class="brand" href="index.html" aria-label="AIM home"><img src="{{LOGO}}" alt="AIM" width="74" height="24"><small>Artemis Investment<br>Metrics</small></a>
   <div class="ws" id="wsSlot"></div>
